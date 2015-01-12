@@ -28,17 +28,17 @@ public class LobbyScreenManager : MonoBehaviour
 		Team1Slots.Clear ();
 		Team2Slots.Clear ();
 
-		if (PhotonNetwork.inRoom) 
-		{
-			int team1PlayerCount = (int)Mathf.Round (PhotonNetwork.room.maxPlayers/2.0f);
-			for (int index = 0; index < PhotonNetwork.room.maxPlayers; index++) 
-			{
-				if(index < team1PlayerCount)
-				{
-					Team1Slots.Add(((GameObject)Instantiate(PlayerSlotItem)).transform);
-				}
-			}
-		} else Debug.LogError ("For some reason you started LobbyScreenManager without being in a room.");
+		//if (PhotonNetwork.inRoom) 
+		//{
+		//	int team1PlayerCount = (int)Mathf.Round (PhotonNetwork.room.maxPlayers/2.0f);
+		//	for (int index = 0; index < PhotonNetwork.room.maxPlayers; index++) 
+		//	{
+		//		if(index < team1PlayerCount)
+		//		{
+		//			Team1Slots.Add(((GameObject)Instantiate(PlayerSlotItem)).transform);
+		//		}
+		//	}
+		//} else Debug.LogError ("For some reason you started LobbyScreenManager without being in a room.");
 	}
 
 	void Update () 

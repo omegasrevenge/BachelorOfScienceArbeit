@@ -3,7 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-public class TitleScreenMenu : Photon.MonoBehaviour 
+public class TitleScreenMenu : MonoBehaviour //Photon.MonoBehaviour 
 {
 	//public enum GUIState { Main, Lobby, Game }
 	//

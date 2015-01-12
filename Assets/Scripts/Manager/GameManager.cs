@@ -22,7 +22,7 @@ public class GameManager : MonoBehaviour
 
 	void Update () 
 	{
-		if (!PhotonNetwork.connected && !PhotonNetwork.connecting) OnNetworkDisconnect();
+		//if (!PhotonNetwork.connected && !PhotonNetwork.connecting) OnNetworkDisconnect();
 
 		//if (MyMainCharacter == null && PhotonNetwork.connected && PhotonNetwork.inRoom) 
 		//{
@@ -73,7 +73,7 @@ public class GameManager : MonoBehaviour
 			newIp += "app-asia.exitgamescloud.com";
 			break;
 		}
-		PhotonNetwork.PhotonServerSettings.ServerAddress = newIp;
-		PhotonNetwork.ConnectUsingSettings("1.0");
+		//PhotonNetwork.PhotonServerSettings.ServerAddress = newIp;
+		//PhotonNetwork.ConnectUsingSettings("1.0");
 	}
 }

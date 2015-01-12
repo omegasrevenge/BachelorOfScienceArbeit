@@ -12,7 +12,7 @@ public class CharControl : MonoBehaviour
 
 	void Start()
 	{
-		if(!GetComponent<PhotonView>().isMine)
+		if(!GetComponent<NetworkView>().isMine)
 		{
 			enabled = false;
 			MyAgent.enabled = false;

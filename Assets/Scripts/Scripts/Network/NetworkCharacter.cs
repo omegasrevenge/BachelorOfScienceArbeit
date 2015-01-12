@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class NetworkChar : MonoBehaviour
+public class NetworkCharacter : MonoBehaviour
 {
     public double m_InterpolationBackTime = 0.1;
     public double m_ExtrapolationLimit = 0.5;
