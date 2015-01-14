@@ -50,6 +50,7 @@ public class PlayerController : MonoBehaviour
 		        ).transform;
 		GetComponent<AlwaysFollow> ().Target = Lead;
 		transform.FindChild ("Camera").gameObject.SetActive (true);
+		transform.FindChild ("Face").gameObject.SetActive (false);
 	}
 
 	//[HideInInspector]
