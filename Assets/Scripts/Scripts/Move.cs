@@ -24,13 +24,13 @@ public class Move : MonoBehaviour {
 	{
 		if(Player.GetComponent<ConstantForce>().force.z > 0) return;
 		Player.transform.localEulerAngles = Vector3.zero;
-		Player.GetComponent<ConstantForce>().force = Vector3.forward*Player.GetComponent<PlayerController>().MovementSpeed;
+		//Player.GetComponent<ConstantForce>().force = Vector3.forward*Player.GetComponent<PlayerController>().MovementSpeed;
 	}
 	
 	public void MoveLeft()
 	{
 		if(Player.GetComponent<ConstantForce>().force.z < 0) return;
 		Player.transform.localEulerAngles = Vector3.up*180;
-		Player.GetComponent<ConstantForce>().force = Vector3.back*Player.GetComponent<PlayerController>().MovementSpeed;
+		//Player.GetComponent<ConstantForce>().force = Vector3.back*Player.GetComponent<PlayerController>().MovementSpeed;
 	}
 }

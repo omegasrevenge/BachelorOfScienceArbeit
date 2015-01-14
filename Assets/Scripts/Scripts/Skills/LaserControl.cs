@@ -69,7 +69,7 @@ public class LaserControl : MonoBehaviour {
 		if(collider.tag == "Player" && collider.networkView.isMine != networkView.isMine && _canDamage)
 		{
 			_canDamage = false;
-			collider.GetComponent<PlayerController>().HealthPoints -= Damage;
+			//collider.GetComponent<PlayerController>().HealthPoints -= Damage;
 		}
 	}
 }

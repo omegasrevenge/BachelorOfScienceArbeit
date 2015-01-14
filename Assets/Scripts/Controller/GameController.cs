@@ -2,17 +2,36 @@
 
 public class GameController : MonoBehaviour
 {
-    public const string GameType = "PrototypeBattle.Project4.MDH2013";
-    public const int Port = 23466;
+	public enum GameState{Menu, InGame}
+	public enum PlayerGameStatus{Host, Player}
 
-    public string GameName = "Uns_geht_ein_Licht_auf";
+	public static GameController Singleton;
 
-	public float PlayerSpawnHeight = 30f;
+    public const string GameType = "BachelorOfScience.SalzmannKirill.MDH2015";
+	public const int Port = 43654;
 
-	private GameObject _player;
-	private Vector3 _spawnPos;
-	private Transform _baseOne;
-	private Transform _baseTwo;
+	public Transform PlayerCharacterParent;
+	public GameObject CharacterPrefab;
+	public Transform[] SpawnPositions = new Transform[4];
+	
+	[HideInInspector]
+    public string GameName = "BachelorOfScienceSalzmannKirill";
+	[HideInInspector]
+	public GameObject PlayerHost;
+	[HideInInspector]
+	public GameObject PlayerOther;
+	[HideInInspector]
+	public PlayerGameStatus MyStatus = PlayerGameStatus.Host;
+	[HideInInspector]
+	public GameState CurGameState = GameState.Menu;
+
+	public HUDController MyHUD
+	{
+		get
+		{
+			return HUDController.Singleton;
+		}
+	}
 
 	public bool HasNetworkConnection
 	{
@@ -22,44 +41,58 @@ public class GameController : MonoBehaviour
 		}
 	}
 
-	// Use this for initialization
 	void Start () 
 	{
-		_baseOne = GameObject.Find("Base1").transform;
-		_baseTwo = GameObject.Find("Base2").transform;
-		_spawnPos = new Vector3(_baseOne.localPosition.x, 
-		                        PlayerSpawnHeight, 
-		                        0f);
+		Singleton = this;
 		Application.runInBackground = true;
 	}
-	
-	// Update is called once per frame
-	void Update () 
+
+	void Update()
 	{
-		if(_player == null && HasNetworkConnection) SpawnPlayer();
-		CleanHierarchy();
+		if (Input.GetKeyDown (KeyCode.Escape)) 
+			networkView.RPC ("ResetLevel", RPCMode.All);
+		if(!HasNetworkConnection && CurGameState == GameState.InGame)
+		    ResetLevel();
 	}
 
-	private void CleanHierarchy()
+	public void SpawnPlayer(PlayerGameStatus status)
 	{
-		GameObject target = GameObject.Find("New Game Object");
-		if(target != null) Destroy(target);
+		Transform spawnPos = GetFurthestSpawnPoint ();
+		GameObject player = (GameObject)Network.Instantiate(Resources.Load("Character"), 
+		                                          spawnPos.position, 
+		                                          spawnPos.rotation,
+		                                            1);
 	}
-	
-	private void SpawnPlayer()
+
+	public Transform GetFurthestSpawnPoint()
 	{
-		_spawnPos.z = Random.Range(_baseOne.localPosition.z, 
-		                           _baseTwo.localPosition.z);
-		_player = (GameObject)Network.Instantiate(Resources.Load("Player"), 
-		                                          _spawnPos, 
-		                                          Quaternion.identity, 
-		                                          1);
+		if (MyStatus == PlayerGameStatus.Host && PlayerOther == null)
+			return SpawnPositions [0];
+		
+		if (MyStatus == PlayerGameStatus.Player && PlayerHost == null)
+			return SpawnPositions [3];
+
+		float distance = 0f;
+		Transform pos = transform;
+
+		Vector3 enemyPos = 
+			MyStatus == PlayerGameStatus.Host ? PlayerOther.transform.position : PlayerHost.transform.position;
+
+		for (int i = 0; i < SpawnPositions.Length; i++) 
+		{
+			float curDist = GetDistance(enemyPos, SpawnPositions[i].position);
+			if(curDist > distance)
+			{
+				distance = curDist;
+				pos = SpawnPositions[i];
+			}
+		}
+
+		return pos;
 	}
 
     public void CreateGame()
 	{
-		Network.Disconnect();
-		ResetLevel();
         Network.InitializeServer(4, Port, !Network.HavePublicAddress());
         MasterServer.RegisterHost(GameType, GameName);
     }
@@ -69,7 +102,6 @@ public class GameController : MonoBehaviour
 		if(HasNetworkConnection) return;
 		MasterServer.RequestHostList(GameType);
     }
-
 
     private void OnMasterServerEvent(MasterServerEvent msEvent)
 	{
@@ -82,48 +114,42 @@ public class GameController : MonoBehaviour
 
     private void OnConnectedToServer()
 	{
-		SpawnPlayer();
+		MyStatus = PlayerGameStatus.Player;
+		SpawnPlayer (MyStatus);
+		CurGameState = GameState.InGame;
 	}
 	
 	void OnServerInitialized()
 	{
-		SpawnPlayer();
+		MyStatus = PlayerGameStatus.Host;
+		SpawnPlayer (MyStatus);
 	}
 
 	void OnPlayerConnected(NetworkPlayer player)
 	{
-		MasterServer.UnregisterHost();
+		MasterServer.UnregisterHost();	//So no one tries to join while game is on going
+		CurGameState = GameState.InGame;
 	}
 
 	void OnPlayerDisconnected(NetworkPlayer player) 
 	{
-		Network.Disconnect();
-		ResetLevel();
+		ResetLevel ();
 	}
 
 	[RPC]
-	public void CleanUpAfterPlayer(NetworkPlayer player)
+	public void ResetLevel()
 	{
-		Network.DestroyPlayerObjects(player);
-	}
-
-	void OnDisconnectedFromServer(NetworkDisconnection info)
-	{
-		ResetLevel();
-	}
-
-	private void ResetLevel()
-	{
-		foreach(GameObject player in GameObject.FindGameObjectsWithTag("Player")) Destroy(player);
-		foreach(GameObject buff in GameObject.FindGameObjectsWithTag("NoCdBuff")) Destroy(buff);
-		foreach(GameObject fireball in GameObject.FindGameObjectsWithTag("Fireball")) Destroy(fireball);
-		foreach(GameObject laser in GameObject.FindGameObjectsWithTag("Laser")) Destroy(laser);
-		foreach(GameObject axe in GameObject.FindGameObjectsWithTag("Axe")) Destroy(axe);
-	}
-
-	public void DisconnectNow()
-	{
+		MasterServer.UnregisterHost();	//So the masterserver doesnt get confused when host disconnects before onplayerconnected is called for the first time
 		Network.Disconnect();
+		foreach(GameObject player in GameObject.FindGameObjectsWithTag("Player")) Destroy(player);
+
+		MyHUD.GameEnd ();
+		CurGameState = GameState.Menu;
+	}
+
+	public static float GetDistance(Vector3 source, Vector3 target)
+	{
+		return Mathf.Abs ((target - source).magnitude);
 	}
 }
 

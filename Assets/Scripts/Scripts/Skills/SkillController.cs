@@ -123,6 +123,6 @@ public class SkillController : MonoBehaviour {
 	public void Jump()
 	{
 		if(Pos == null) return;
-		Pos.GetComponent<PlayerController>().Jump();
+		//Pos.GetComponent<PlayerController>().Jump();
 	}
 }
