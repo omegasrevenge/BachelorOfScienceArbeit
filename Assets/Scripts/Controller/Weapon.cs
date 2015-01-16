@@ -3,51 +3,49 @@ using System.Collections;
 
 public class Weapon : MonoBehaviour 
 {
-	public const string WeaponModelFolder = "WeaponModels";
-	public enum WeaponTypeEnum{Default, Rifle, MachineGun, Shotgun, Sniper, Bazooka, Length}
-	public readonly string[] WeaponModelNames = new string[]{"DefaultModel", "RifleModel", "MachinegunModel", "ShotgunModel", "SniperModel", "BazookaModel"};
 
-	public enum AmmunitionTypeEnum{Generic, Bouncy, Shrapnel, Explosive}
-	public enum SecondaryEffectEnum{None, Healing, MoreRange, Delay}
-
-	public WeaponTypeEnum WeaponType;
-	public AmmunitionTypeEnum AmmunitionType;
-	public SecondaryEffectEnum SecondaryEffect;
+	public Properties.WeaponTypeEnum WeaponType;
+	public Properties.AmmunitionTypeEnum AmmunitionType;
+	public Properties.SecondaryEffectEnum SecondaryEffect;
 
 	public Transform Nozzle;
-	public GameObject WeaponBlueprint;
+	[HideInInspector]
+	public GameObject WeaponModel;
 
 	public float Accuracy;
+	private float _curAccuracy;
 	public int AmmunitionCount;
 	public int Damage;
 
-	public static void Create(WeaponTypeEnum WeaponType, AmmunitionTypeEnum AmmunitionType, SecondaryEffectEnum SecondaryEffect, Vector3 Position, Quaternion Rotation)
+	void Start()
 	{
-		GameObject NewWeapon = (GameObject)Network.Instantiate (Resources.Load ("Weapon"), Position, Rotation, 1);
-		NewWeapon.GetComponent<Weapon>().networkView.RPC ("Initialize", RPCMode.AllBuffered, 
-		                                                  (int)WeaponType,
-		                                                  (int)AmmunitionType,
-		                                                  (int)SecondaryEffect
-				);
+		enabled = networkView.isMine;
+	}
+
+	public void PickupNew(int WeaponType, int AmmunitionType, int SecondaryEffect)
+	{
+		this.AmmunitionType = (Properties.AmmunitionTypeEnum)AmmunitionType;
+		this.SecondaryEffect = (Properties.SecondaryEffectEnum)SecondaryEffect;
+		this.WeaponType = (Properties.WeaponTypeEnum)WeaponType;
+		networkView.RPC ("Create", RPCMode.AllBuffered, WeaponType);
 	}
 
 	[RPC]
-	public void Initialize(int WeaponType, int AmmunitionType, int SecondaryEffect )
+	public void Create(int WeaponType)
 	{
-		this.WeaponType = (WeaponTypeEnum)WeaponType;
-		this.AmmunitionType  = (AmmunitionTypeEnum)AmmunitionType;
-		this.SecondaryEffect = (SecondaryEffectEnum)SecondaryEffect;
-		
-		GameObject NewWeaponModel = (GameObject)Instantiate 
-			(
-			Resources.Load (WeaponModelFolder + "/" + WeaponModelNames [WeaponType]), 
-			transform.position, 
-			transform.rotation
-			);
+		if (WeaponModel != null)
+						Destroy (WeaponModel);
 
-		//NewWeaponModel.transform.parent = NewWeapon.transform;
-		//
-		//WeaponScript.Nozzle = NewWeaponModel.transform.FindChild ("Nozzle");
+		WeaponModel = 
+			(GameObject)Instantiate (
+				Resources.Load (Properties.WeaponModelFolder + "/" + GameController.Singleton.MyProperties.WeaponModelNames [WeaponType]), 
+				Vector3.zero, 
+				Quaternion.identity
+				); 
+
+		WeaponModel.transform.parent = transform;
+		WeaponModel.transform.localPosition = Vector3.zero;
+		WeaponModel.transform.localRotation = Quaternion.identity;
 	}
 
 	public void Shoot()

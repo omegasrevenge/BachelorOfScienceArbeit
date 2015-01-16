@@ -20,11 +20,12 @@ public class PlayerController : MonoBehaviour
 		
 		switch (MyGameController.MyStatus) 
 		{
-		case GameController.PlayerGameStatus.Host:
+		case Properties.PlayerGameStatus.Host:
 													if(networkView.isMine)
 														{
 															MyGameController.PlayerHost = gameObject;
 															MyWeapon = ((GameObject)Network.Instantiate (Resources.Load ("Weapon"), Vector3.zero, Quaternion.identity, 1)).GetComponent<Weapon>();
+															MyWeapon.PickupNew(0, 0, 0);
 															EnableControls();
 														}
 													else
@@ -33,11 +34,12 @@ public class PlayerController : MonoBehaviour
 														}
 													break;
 
-		case GameController.PlayerGameStatus.Player:
+		case Properties.PlayerGameStatus.Player:
 													if(networkView.isMine)
 														{
 															MyGameController.PlayerOther = gameObject;
 															MyWeapon = ((GameObject)Network.Instantiate (Resources.Load ("Weapon"), Vector3.zero, Quaternion.identity, 1)).GetComponent<Weapon>();
+															MyWeapon.PickupNew(0, 0, 0);
 															EnableControls();
 														}
 													else
@@ -55,13 +57,22 @@ public class PlayerController : MonoBehaviour
 			transform.position, 
 			transform.rotation)
 		        ).transform;
+
+		GetComponent<AlwaysFollow> ().enabled = true;
 		GetComponent<AlwaysFollow> ().Target = Lead;
+
 		transform.FindChild ("Face").gameObject.SetActive (false);
 
 		transform.FindChild ("Camera").gameObject.SetActive (true);
 		MyWeapon.transform.parent = WeaponAnchor;
 		MyWeapon.transform.localPosition = Vector3.zero;
 		MyWeapon.transform.localRotation = Quaternion.identity;
+	}
+
+	public void PickupWeapon(int WeaponType, int AmmunitionType, int SecondaryEffect)
+	{
+		if(networkView.isMine)
+			MyWeapon.PickupNew (WeaponType, AmmunitionType, SecondaryEffect);
 	}
 
 	//[HideInInspector]
