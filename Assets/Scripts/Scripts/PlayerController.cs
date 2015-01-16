@@ -5,20 +5,26 @@ using System.Collections.Generic;
 [RequireComponent(typeof(NetworkView))]
 public class PlayerController : MonoBehaviour 
 {
+	[HideInInspector]
 	public GameController MyGameController;
+	[HideInInspector]
 	public Transform Lead;
+	[HideInInspector]
+	public Weapon MyWeapon;
+
+	public Transform WeaponAnchor;
 
 	void Start()
 	{
 		MyGameController = GameController.Singleton;
-		//transform.parent.parent = MyGameController.PlayerCharacterParent;
-
+		
 		switch (MyGameController.MyStatus) 
 		{
 		case GameController.PlayerGameStatus.Host:
 													if(networkView.isMine)
 														{
 															MyGameController.PlayerHost = gameObject;
+															MyWeapon = ((GameObject)Network.Instantiate (Resources.Load ("Weapon"), Vector3.zero, Quaternion.identity, 1)).GetComponent<Weapon>();
 															EnableControls();
 														}
 													else
@@ -31,6 +37,7 @@ public class PlayerController : MonoBehaviour
 													if(networkView.isMine)
 														{
 															MyGameController.PlayerOther = gameObject;
+															MyWeapon = ((GameObject)Network.Instantiate (Resources.Load ("Weapon"), Vector3.zero, Quaternion.identity, 1)).GetComponent<Weapon>();
 															EnableControls();
 														}
 													else
@@ -49,8 +56,12 @@ public class PlayerController : MonoBehaviour
 			transform.rotation)
 		        ).transform;
 		GetComponent<AlwaysFollow> ().Target = Lead;
-		transform.FindChild ("Camera").gameObject.SetActive (true);
 		transform.FindChild ("Face").gameObject.SetActive (false);
+
+		transform.FindChild ("Camera").gameObject.SetActive (true);
+		MyWeapon.transform.parent = WeaponAnchor;
+		MyWeapon.transform.localPosition = Vector3.zero;
+		MyWeapon.transform.localRotation = Quaternion.identity;
 	}
 
 	//[HideInInspector]

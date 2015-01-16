@@ -29,6 +29,10 @@ public class HUDController : MonoBehaviour
 
 	public void GameJoin()
 	{
+		//Weapon Filler = new GameObject("...").AddComponent<Weapon>();
+		//Debug.Log ("THIS IS THE URL: "+Weapon.WeaponModelFolder + "/" + Filler.WeaponModelNames [1]);
+		//Resources.Load (Weapon.WeaponModelFolder + "/" + Filler.WeaponModelNames [1]);
+		//Destroy (Filler.gameObject);
 		MainMenu.SetActive (false);
 		MyGameController.RequestHosts ();
 	}

@@ -55,6 +55,14 @@ public class GameController : MonoBehaviour
 		    ResetLevel();
 	}
 
+	public void StartGame()
+	{
+		CurGameState = GameState.InGame;
+		SpawnPlayer (MyStatus);
+		if(MyStatus == PlayerGameStatus.Host)
+			WeaponSpawnPlatform.SetWeaponPlatforms (true);
+	}
+
 	public void SpawnPlayer(PlayerGameStatus status)
 	{
 		Transform spawnPos = GetFurthestSpawnPoint ();
@@ -115,20 +123,18 @@ public class GameController : MonoBehaviour
     private void OnConnectedToServer()
 	{
 		MyStatus = PlayerGameStatus.Player;
-		SpawnPlayer (MyStatus);
-		CurGameState = GameState.InGame;
+		StartGame ();
 	}
 	
 	void OnServerInitialized()
 	{
 		MyStatus = PlayerGameStatus.Host;
-		SpawnPlayer (MyStatus);
 	}
 
 	void OnPlayerConnected(NetworkPlayer player)
 	{
 		MasterServer.UnregisterHost();	//So no one tries to join while game is on going
-		CurGameState = GameState.InGame;
+		StartGame ();
 	}
 
 	void OnPlayerDisconnected(NetworkPlayer player) 
@@ -141,10 +147,15 @@ public class GameController : MonoBehaviour
 	{
 		MasterServer.UnregisterHost();	//So the masterserver doesnt get confused when host disconnects before onplayerconnected is called for the first time
 		Network.Disconnect();
-		foreach(GameObject player in GameObject.FindGameObjectsWithTag("Player")) Destroy(player);
 
 		MyHUD.GameEnd ();
 		CurGameState = GameState.Menu;
+		WeaponSpawnPlatform.SetWeaponPlatforms (false);
+		
+		foreach(GameObject Player in GameObject.FindGameObjectsWithTag("Player")) 
+			Destroy(Player);
+		foreach (GameObject Weapon in GameObject.FindGameObjectsWithTag ("Weapon"))
+			Destroy(Weapon);
 	}
 
 	public static float GetDistance(Vector3 source, Vector3 target)
