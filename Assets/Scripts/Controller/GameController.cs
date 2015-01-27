@@ -1,13 +1,14 @@
 ﻿using UnityEngine;
+using System.Collections;
 
 public class GameController : MonoBehaviour
 {
 	public static GameController Singleton;
 
-	public Transform PlayerCharacterParent;
-	public GameObject CharacterPrefab;
 	public Transform[] SpawnPositions = new Transform[4];
 
+	[HideInInspector]
+	public GameObject MyPlayer;
 	[HideInInspector]
 	public GameObject PlayerHost;
 	[HideInInspector]
@@ -16,6 +17,8 @@ public class GameController : MonoBehaviour
 	public Properties.PlayerGameStatus MyStatus = Properties.PlayerGameStatus.Host;
 	[HideInInspector]
 	public Properties.GameState CurGameState = Properties.GameState.Menu;
+	[HideInInspector]
+	public bool DestroyCamera = true;
 	
 	private Properties _props;
 
@@ -54,20 +57,20 @@ public class GameController : MonoBehaviour
 	void Update()
 	{
 		if (Input.GetKeyDown (KeyCode.Escape)) 
-			networkView.RPC ("ResetGame", RPCMode.All);
+			networkView.RPC ("RPCResetGame", RPCMode.All);
 		if(!HasNetworkConnection && CurGameState == Properties.GameState.InGame)
-			ResetGame();
+			RPCResetGame();
 	}
 
 	public void StartGame()
 	{
 		CurGameState = Properties.GameState.InGame;
-		SpawnPlayer (MyStatus);
+		SpawnPlayer ();
 		if(MyStatus == Properties.PlayerGameStatus.Host)
 			WeaponSpawnPlatform.SetWeaponPlatforms (true);
 	}
 
-	public void SpawnPlayer(Properties.PlayerGameStatus status)
+	public void SpawnPlayer()
 	{
 		Transform spawnPos = GetFurthestSpawnPoint ();
 		Network.Instantiate(Resources.Load("Character"), 
@@ -143,11 +146,11 @@ public class GameController : MonoBehaviour
 
 	void OnPlayerDisconnected(NetworkPlayer player) 
 	{
-		ResetGame ();
+		RPCResetGame ();
 	}
 
 	[RPC]
-	public void ResetGame()
+	public void RPCResetGame()
 	{
 		MasterServer.UnregisterHost();	//So the masterserver doesnt get confused when host disconnects before onplayerconnected is called for the first time
 		Network.Disconnect();
@@ -160,6 +163,32 @@ public class GameController : MonoBehaviour
 			Destroy(Player);
 		foreach (GameObject Weapon in GameObject.FindGameObjectsWithTag ("Weapon"))
 			Destroy(Weapon);
+	}
+
+	public void Respawn(float RespawnTime)
+	{
+		StartCoroutine ("CRespawn", RespawnTime);
+	}
+	
+	public IEnumerator CRespawn(float RespawnTime)
+	{
+		float _curRespawnTimer = RespawnTime;
+		
+		while (_curRespawnTimer > 0f) 
+		{
+			yield return new WaitForEndOfFrame();
+			//RESPAWN TIMER FOR UI HERE!
+			_curRespawnTimer -= Time.deltaTime;
+		}
+
+		if (DestroyCamera) 
+		{
+			Camera[] _myCams = GameObject.FindObjectsOfType<Camera> ();
+			foreach(Camera cam in _myCams)
+				Destroy(cam.gameObject);
+		}
+
+		SpawnPlayer ();
 	}
 
 	public static float GetDistance(Vector3 source, Vector3 target)

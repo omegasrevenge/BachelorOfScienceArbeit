@@ -27,7 +27,7 @@ public class WeaponSpawnPlatform : MonoBehaviour
 		}
 	}
 
-	void Update () 
+	void FixedUpdate () 
 	{
 		WeaponPivot.transform.localEulerAngles += new Vector3 (0f, GameController.Singleton.MyProperties.RotationSpeed*Time.deltaTime, 0f);
 
@@ -38,14 +38,14 @@ public class WeaponSpawnPlatform : MonoBehaviour
 			if(Timer >= Properties.WeaponSpawnTime)
 			{
 				Timer = 0f;
-				int WeaponType = Random.Range(1, ((int)Properties.WeaponTypeEnum.Length)-1);
-				networkView.RPC("SummonWeapon", RPCMode.AllBuffered, WeaponType);
+				int WeaponType = Random.Range(1, ((int)Properties.WeaponTypeEnum.Length));
+				networkView.RPC("RPCSummonWeapon", RPCMode.AllBuffered, WeaponType);
 			}
 		}
 	}
 
 	[RPC]
-	public void SummonWeapon(int WeaponType)
+	public void RPCSummonWeapon(int WeaponType)
 	{
 		MyWeaponType = WeaponType;
 
@@ -64,13 +64,13 @@ public class WeaponSpawnPlatform : MonoBehaviour
 	}
 
 	[RPC]
-	public void DestroyWeapon()
+	public void RPCDestroyWeapon()
 	{
 		if (MyWeapon != null)
 						Destroy (MyWeapon);
 	}
 
-	public void OnTriggerEnter(Collider other)
+	public void OnTriggerStay(Collider other)
 	{
 		if (other.transform.parent != null && other.transform.parent.tag == "Player") 
 		{
@@ -78,11 +78,11 @@ public class WeaponSpawnPlatform : MonoBehaviour
 
 			other.transform.parent.GetComponent<PlayerController>().PickupWeapon(
 				MyWeaponType,
-				Random.Range(0, ((int)Properties.AmmunitionTypeEnum.Length)-1),
-				Random.Range(0, ((int)Properties.SecondaryEffectEnum.Length)-1)
+				Random.Range(0, ((int)Properties.AmmunitionTypeEnum.Length)),
+				Random.Range(0, ((int)Properties.SecondaryEffectEnum.Length))
 				);
 
-			networkView.RPC("DestroyWeapon", RPCMode.AllBuffered);
+			networkView.RPC("RPCDestroyWeapon", RPCMode.AllBuffered);
 		}
 	}
 }
