@@ -6,8 +6,8 @@ public class GameController : MonoBehaviour
 {
 	public static GameController Singleton;
 
-	public Transform[] SpawnPositions = new Transform[4];
-
+	[HideInInspector]
+	public List<Transform> SpawnPositions = new List<Transform> ();
 	[HideInInspector]
 	public GameObject MyPlayer;
 	[HideInInspector]
@@ -18,8 +18,11 @@ public class GameController : MonoBehaviour
 	public List<GameObject> Players = new List<GameObject>();
 	[HideInInspector]
 	public List<GameObject> Weapons = new List<GameObject>();
+	[HideInInspector]
+	public GameObject CurMap;
 
-	public int MaxNumberAllowedClients = 3;
+	public string SelectedMap = "MapSmallArena";
+	public int MaxNumberAllowedClients = 3; // this is here and not in properties because every map could have a different amount
 	public int TotalConnectionNumber = 0;
 
 	private bool _timeout = true;
@@ -61,12 +64,24 @@ public class GameController : MonoBehaviour
 	void Update()
 	{
 		if (Input.GetKeyDown (KeyCode.Escape)) 
-			networkView.RPC ("RPCResetGame", RPCMode.AllBuffered);
+		{
+			if(Network.isServer)
+				networkView.RPC ("RPCResetGame", RPCMode.AllBuffered);
+			else
+				RPCResetGame();
+		}
 	}
 
 	public void StartGame()
 	{
 		MasterServer.UnregisterHost();	//So no one tries to join while game is on going
+
+		if(CurMap == null)
+			Network.Instantiate (Resources.Load(SelectedMap), Vector3.zero, Quaternion.identity, 1);
+	}
+
+	public void ArenaSpawned()
+	{
 		networkView.RPC ("RPCSpawnOrder", RPCMode.AllBuffered, Network.connections);
 	}
 
@@ -124,29 +139,28 @@ public class GameController : MonoBehaviour
 	public Transform GetFurthestSpawnPoint()
 	{
 		if (Players.Count < 1)
-						return SpawnPositions [0];
+						return SpawnPositions [Random.Range(0, SpawnPositions.Count)];
 
-		float distance = 0f;
-		Transform pos = transform;
+		int curSpawnPointIndex = 0;
+		float spawnPointDistance = 0f;
 
-		Vector3 enemyPos = Vector3.zero;
-
-		foreach(GameObject player in Players)
-			enemyPos += player.transform.position;
-
-		enemyPos /= Players.Count;
-
-		for (int i = 0; i < SpawnPositions.Length; i++) 
+		for (int i = 0; i < SpawnPositions.Count; i++) 
 		{
-			float curDist = GetDistance(enemyPos, SpawnPositions[i].position);
-			if(curDist > distance)
+			float tallyDistance = 0f;
+
+			foreach(GameObject player in Players)
 			{
-				distance = curDist;
-				pos = SpawnPositions[i];
+				tallyDistance += GetDistance(player.transform.position, SpawnPositions[i].position);
+			}
+
+			if(tallyDistance > spawnPointDistance)
+			{
+				curSpawnPointIndex = i;
+				spawnPointDistance = tallyDistance;
 			}
 		}
 
-		return pos;
+		return SpawnPositions[curSpawnPointIndex];
 	}
 
     public void CreateGame()
@@ -219,25 +233,41 @@ public class GameController : MonoBehaviour
 		//
 	}
 
-	void OnPlayerDisconnected(NetworkPlayer player) 
+	void OnPlayerDisconnected(NetworkPlayer origin) // is called ONLY ON THE SERVER! SAFE TO USE!
 	{
-		if (Network.connections.Length == 1)
-			MyHUD.UpdateLobbyText (1);
-		else
-			MyHUD.PollConnectionsInfo ();
+		switch (CurGameState) 
+		{
+
+		case Properties.GameState.Lobby:
+				if (Network.connections.Length == 1)
+					MyHUD.UpdateLobbyText (1);
+				else
+					MyHUD.PollConnectionsInfo ();
+			break;
+
+		case Properties.GameState.InGame:
+				Network.DestroyPlayerObjects(origin);
+			break;
+		}
 	}
 
 	void OnDisconnectedFromServer(NetworkDisconnection info) 
 	{
-		RPCResetGame ();
+		CleanResetGame (); //if the server leaves the game, his rpcresetgame doesnt get sent. the clients have to clean up after themselves
 	}
 
 	[RPC]
 	public void RPCResetGame()
 	{
-		MasterServer.UnregisterHost();	//So the masterserver doesnt get confused when host disconnects before onplayerconnected is called for the first time
+		if(Network.isServer)
+			MasterServer.UnregisterHost();	//So the masterserver doesnt get confused when host disconnects before onplayerconnected is called for the first time
 		Network.Disconnect();
 
+		CleanResetGame ();
+	}
+
+	public void CleanResetGame()
+	{
 		MyHUD.SwitchToMainMenu ();
 		CurGameState = Properties.GameState.Menu;
 		WeaponSpawnPlatform.SetWeaponPlatforms (false);
@@ -245,10 +275,14 @@ public class GameController : MonoBehaviour
 		foreach(GameObject Player in Players) 
 			Destroy(Player);
 		Players.Clear ();
-
+		
 		foreach (GameObject Weapon in Weapons)
 			Destroy(Weapon);
 		Weapons.Clear ();
+
+		if (CurMap != null)
+			Destroy (CurMap);
+		SpawnPositions.Clear ();
 	}
 
 	public void Respawn(float RespawnTime)

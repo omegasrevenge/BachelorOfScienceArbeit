@@ -28,23 +28,4 @@ sendto failed with code -1 for char 9 and length 1464.
 sendto failed with code -1 for char 9 and length 1464.
 sendto failed with code -1 for char 9 and length 1464.
 sendto failed with code -1 for char 9 and length 1464.
-Received pong from 192.168.1.2:43654
- 
-(Filename:  Line: 836)
-
-Received pong from 192.168.137.1:43654
- 
-(Filename:  Line: 836)
-
-REQUESTING INFO FROM SERVER! PollConnectionsInfo: UnityEngine.NetworkPlayer[]
- 
-(Filename: C:/BuildAgent/work/d63dfc6385190b60/artifacts/StandalonePlayerGenerated/UnityEngineDebug.cpp Line: 49)
-
-GOT THAT INFO! Just received new connections length number: 2
- 
-(Filename: C:/BuildAgent/work/d63dfc6385190b60/artifacts/StandalonePlayerGenerated/UnityEngineDebug.cpp Line: 49)
-
-SwitchToMainMenu
- 
-(Filename: C:/BuildAgent/work/d63dfc6385190b60/artifacts/StandalonePlayerGenerated/UnityEngineDebug.cpp Line: 49)
-
+Platform assembly: C:\Users\user\Documents\GitHub\BachelorOfScienceArbeit\CurrentBuild_Data\Managed\Boo.Lang.dll (this message is harmless)

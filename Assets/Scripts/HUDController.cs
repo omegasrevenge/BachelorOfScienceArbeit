@@ -10,6 +10,7 @@ public class HUDController : MonoBehaviour
 	public GameObject Lobby;
 	public GameObject WaitingForServer;
 
+	private Text _myLobbyText;
 	private string _lobbyText;
 	
 	public GameController MyGameController
@@ -23,7 +24,8 @@ public class HUDController : MonoBehaviour
 	void Start () 
 	{
 		Singleton = this;
-		_lobbyText = Lobby.transform.FindChild ("Connections").GetComponent<Text> ().text;
+		_myLobbyText = Lobby.transform.FindChild ("Connections").GetComponent<Text> ();
+		_lobbyText = _myLobbyText.text;
 	}
 
 	public void GameStart()
@@ -42,16 +44,15 @@ public class HUDController : MonoBehaviour
 
 	public void SwitchToLobby()
 	{
+		_myLobbyText.text = _lobbyText; //if you are client, then leave and open your own game, this does not get otherwise reset
 		WaitingForServer.SetActive (false);
 		Lobby.SetActive (true);
 		PollConnectionsInfo ();
-		if (!Network.isServer)
-						Lobby.transform.FindChild ("StartGame").gameObject.SetActive (false);
+		Lobby.transform.FindChild ("StartGame").gameObject.SetActive (Network.isServer);
 	}
 
 	public void SwitchToMainMenu()
 	{
-		Debug.Log ("SwitchToMainMenu");
 		WaitingForServer.SetActive (false);
 		Lobby.SetActive (false);
 		MainMenu.SetActive (true);
@@ -59,7 +60,6 @@ public class HUDController : MonoBehaviour
 
 	public void GameCommence()
 	{
-		Debug.Log ("GameCommence");
 		MainMenu.SetActive (false);
 		Lobby.SetActive (false);
 		WaitingForServer.SetActive (false);
@@ -72,26 +72,23 @@ public class HUDController : MonoBehaviour
 
 	public void UpdateLobbyText(int number)
 	{
-		Lobby.transform.FindChild ("Connections").GetComponent<Text> ().text = _lobbyText.Replace ("1", number.ToString ());
+		_myLobbyText.text = _lobbyText.Replace ("1", number.ToString ());
 	}
 
 	public void PollConnectionsInfo()
 	{
-		Debug.Log ("REQUESTING INFO FROM SERVER! PollConnectionsInfo: "+Network.connections.ToString());
 		networkView.RPC ("RPCPollConnectionsInfo", RPCMode.Server);
 	}
 
 	[RPC]
 	public void RPCPollConnectionsInfo()
 	{
-		Debug.Log ("SENDING REQUESTED INFO TO EVERYONE");
 		networkView.RPC ("RPCReceiveConnectionsInfo", RPCMode.AllBuffered, Network.connections.Length+1);
 	}
 
 	[RPC]
 	public void RPCReceiveConnectionsInfo(int count)
 	{
-		Debug.Log ("GOT THAT INFO! Just received new connections length number: "+count.ToString());
 		MyGameController.TotalConnectionNumber = count;
 		UpdateLobbyText (count);
 	}
