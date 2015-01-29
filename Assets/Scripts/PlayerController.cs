@@ -21,35 +21,13 @@ public class PlayerController : MonoBehaviour
 	void Start()
 	{
 		MyGameController = GameController.Singleton;
-		
-		switch (MyGameController.MyStatus) 
-		{
-		case Properties.PlayerGameStatus.Host:
-													if(networkView.isMine)
-														{
-															MyGameController.PlayerHost = gameObject;
-															InitializePlayer();
-															MyGameController.MyPlayer = gameObject;
-														}
-													else
-														{
-															MyGameController.PlayerOther = gameObject;
-														}
-													break;
 
-		case Properties.PlayerGameStatus.Player:
-													if(networkView.isMine)
-														{
-															MyGameController.PlayerOther = gameObject;
-															InitializePlayer();
-															MyGameController.MyPlayer = gameObject;
-														}
-													else
-														{
-															MyGameController.PlayerHost = gameObject;
-														}
-													break;
-		}
+		MyGameController.Players.Add (gameObject);
+
+		if (!networkView.isMine) return;
+
+		MyGameController.MyPlayer = gameObject;
+		InitializePlayer ();
 	}
 
 	public void InitializePlayer()
@@ -125,12 +103,10 @@ public class PlayerController : MonoBehaviour
 
 		MeshRenderer[] myRenderers = gameObject.GetComponentsInChildren<MeshRenderer> ();
 	
-		if (MyWeapon == null) 
+		foreach (GameObject weapon in MyGameController.Weapons) 
 		{
-			GameObject[] _weapons = GameObject.FindGameObjectsWithTag("Weapon");
-			foreach(GameObject weap in _weapons)
-				if(weap.transform.parent == null)
-					MyWeapon = weap.GetComponent<Weapon>();
+			if(weapon.networkView.owner == networkView.owner)
+				MyWeapon = weapon.GetComponent<Weapon>();
 		}
 
 		MeshRenderer[] weaponRenderers = MyWeapon.gameObject.GetComponentsInChildren<MeshRenderer> ();
@@ -169,5 +145,10 @@ public class PlayerController : MonoBehaviour
 			Network.Destroy (MyWeapon.networkView.viewID);
 			Network.Destroy (networkView.viewID);
 		}
+	}
+	
+	public void OnDestroy()
+	{
+		GameController.Singleton.Players.Remove (gameObject);
 	}
 }

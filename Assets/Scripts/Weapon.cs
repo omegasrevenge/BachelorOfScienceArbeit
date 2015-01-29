@@ -23,6 +23,7 @@ public class Weapon : MonoBehaviour
 
 	void Start()
 	{
+		GameController.Singleton.Weapons.Add (gameObject);
 		enabled = networkView.isMine;
 	}
 
@@ -88,5 +89,10 @@ public class Weapon : MonoBehaviour
 		Bullet MyBullet = Bullet.GetComponent<Bullet> ();
 		MyBullet.Initialize ((int)WeaponType);
 		MyBullet.GetShot(TargetPos);
+	}
+
+	public void OnDestroy()
+	{
+		GameController.Singleton.Weapons.Remove (gameObject);
 	}
 }

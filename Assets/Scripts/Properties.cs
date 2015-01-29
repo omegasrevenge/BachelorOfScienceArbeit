@@ -49,10 +49,11 @@ public class Properties : MonoBehaviour
 	///////////////////////////
 
 	// GAME CONTROLLER //
-	public enum GameState{Menu, InGame}
-	public enum PlayerGameStatus{Host, Player}
+	public enum GameState{Menu, Lobby, InGame}
 	public const string GameType = "BachelorOfScience.SalzmannKirill.MDH2015";
 	public const int Port = 43654;
 	public const string GameName = "BachelorOfScienceSalzmannKirill";
+	public const float RequestHostTimeoutLength = 10f;
+	public const float GameStartTimer = 5f;
 	/////////////////////
 }

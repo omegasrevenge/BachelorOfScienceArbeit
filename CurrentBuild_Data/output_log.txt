@@ -18,7 +18,7 @@ Platform assembly: C:\Users\user\Documents\GitHub\BachelorOfScienceArbeit\Curren
 Loading C:\Users\user\Documents\GitHub\BachelorOfScienceArbeit\CurrentBuild_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
 Platform assembly: C:\Users\user\Documents\GitHub\BachelorOfScienceArbeit\CurrentBuild_Data\Managed\Photon3Unity3D.dll (this message is harmless)
 Loading C:\Users\user\Documents\GitHub\BachelorOfScienceArbeit\CurrentBuild_Data\Managed\Photon3Unity3D.dll into Unity Child Domain
-- Completed reload, in  0.060 seconds
+- Completed reload, in  0.067 seconds
 desktop: 1920x1080 60Hz; virtual: 1920x1080 at 0,0
 <RI> Initializing input.
 <RI> Input initialized.
@@ -36,8 +36,15 @@ Received pong from 192.168.137.1:43654
  
 (Filename:  Line: 836)
 
-Platform assembly: C:\Users\user\Documents\GitHub\BachelorOfScienceArbeit\CurrentBuild_Data\Managed\Boo.Lang.dll (this message is harmless)
-The server has disconnected from the client. Most likely the server has shut down.
+REQUESTING INFO FROM SERVER! PollConnectionsInfo: UnityEngine.NetworkPlayer[]
  
-(Filename:  Line: 745)
+(Filename: C:/BuildAgent/work/d63dfc6385190b60/artifacts/StandalonePlayerGenerated/UnityEngineDebug.cpp Line: 49)
+
+GOT THAT INFO! Just received new connections length number: 2
+ 
+(Filename: C:/BuildAgent/work/d63dfc6385190b60/artifacts/StandalonePlayerGenerated/UnityEngineDebug.cpp Line: 49)
+
+SwitchToMainMenu
+ 
+(Filename: C:/BuildAgent/work/d63dfc6385190b60/artifacts/StandalonePlayerGenerated/UnityEngineDebug.cpp Line: 49)
 

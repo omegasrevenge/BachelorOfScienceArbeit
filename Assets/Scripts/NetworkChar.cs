@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class NetworkCharacter : MonoBehaviour
+public class NetworkChar : MonoBehaviour
 {
     public double m_InterpolationBackTime = 0.1;
     public double m_ExtrapolationLimit = 0.5;
@@ -23,11 +23,6 @@ public class NetworkCharacter : MonoBehaviour
     State[] m_BufferedState = new State[20];
     // Keep track of what slots are used
     int m_TimestampCount;
-
-    void Awake()
-    {
-
-    }
 
     public virtual void OnSerializeNetworkView(BitStream stream, NetworkMessageInfo info)
     {

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class GameController : MonoBehaviour
 {
@@ -10,15 +11,18 @@ public class GameController : MonoBehaviour
 	[HideInInspector]
 	public GameObject MyPlayer;
 	[HideInInspector]
-	public GameObject PlayerHost;
-	[HideInInspector]
-	public GameObject PlayerOther;
-	[HideInInspector]
-	public Properties.PlayerGameStatus MyStatus = Properties.PlayerGameStatus.Host;
-	[HideInInspector]
 	public Properties.GameState CurGameState = Properties.GameState.Menu;
 	[HideInInspector]
 	public bool DestroyCamera = true;
+	[HideInInspector]
+	public List<GameObject> Players = new List<GameObject>();
+	[HideInInspector]
+	public List<GameObject> Weapons = new List<GameObject>();
+
+	public int MaxNumberAllowedClients = 3;
+	public int TotalConnectionNumber = 0;
+
+	private bool _timeout = true;
 	
 	private Properties _props;
 
@@ -57,17 +61,55 @@ public class GameController : MonoBehaviour
 	void Update()
 	{
 		if (Input.GetKeyDown (KeyCode.Escape)) 
-			networkView.RPC ("RPCResetGame", RPCMode.All);
-		if(!HasNetworkConnection && CurGameState == Properties.GameState.InGame)
-			RPCResetGame();
+			networkView.RPC ("RPCResetGame", RPCMode.AllBuffered);
 	}
 
 	public void StartGame()
 	{
+		MasterServer.UnregisterHost();	//So no one tries to join while game is on going
+		networkView.RPC ("RPCSpawnOrder", RPCMode.AllBuffered, Network.connections);
+	}
+
+	[RPC]
+	public void RPCStartGame()
+	{
 		CurGameState = Properties.GameState.InGame;
-		SpawnPlayer ();
-		if(MyStatus == Properties.PlayerGameStatus.Host)
+		MyHUD.GameCommence ();
+		if(Network.isServer)
 			WeaponSpawnPlatform.SetWeaponPlatforms (true);
+	}
+
+	public IEnumerator CPlayerSpawnSequence(NetworkPlayer[] order)
+	{
+		if (Network.isServer) 
+		{
+			SpawnPlayer ();
+			yield return new WaitForEndOfFrame();
+		} 
+		else 
+		{
+			while (Players.Count < 1)
+			{
+				yield return new WaitForEndOfFrame();
+			}
+		}
+
+		while (Players.Count < order.Length+1) 
+		{
+			if (order [Players.Count - 1] == Network.player)
+				SpawnPlayer ();
+
+			yield return new WaitForEndOfFrame();
+		}
+
+		if(Network.isServer)
+			networkView.RPC ("RPCStartGame", RPCMode.AllBuffered);
+	}
+
+	[RPC]
+	public void RPCSpawnOrder(NetworkPlayer[] order)
+	{
+		StartCoroutine ("CPlayerSpawnSequence", order);
 	}
 
 	public void SpawnPlayer()
@@ -81,17 +123,18 @@ public class GameController : MonoBehaviour
 
 	public Transform GetFurthestSpawnPoint()
 	{
-		if (MyStatus == Properties.PlayerGameStatus.Host && PlayerOther == null)
-			return SpawnPositions [0];
-		
-		if (MyStatus == Properties.PlayerGameStatus.Player && PlayerHost == null)
-			return SpawnPositions [3];
+		if (Players.Count < 1)
+						return SpawnPositions [0];
 
 		float distance = 0f;
 		Transform pos = transform;
 
-		Vector3 enemyPos = 
-			MyStatus == Properties.PlayerGameStatus.Host ? PlayerOther.transform.position : PlayerHost.transform.position;
+		Vector3 enemyPos = Vector3.zero;
+
+		foreach(GameObject player in Players)
+			enemyPos += player.transform.position;
+
+		enemyPos /= Players.Count;
 
 		for (int i = 0; i < SpawnPositions.Length; i++) 
 		{
@@ -108,18 +151,51 @@ public class GameController : MonoBehaviour
 
     public void CreateGame()
 	{
-        Network.InitializeServer(4, Properties.Port, !Network.HavePublicAddress());
+        Network.InitializeServer(MaxNumberAllowedClients, Properties.Port, !Network.HavePublicAddress());
 		MasterServer.RegisterHost(Properties.GameType, Properties.GameName);
+		CurGameState = Properties.GameState.Lobby;
+		MyHUD.SwitchToLobby ();
     }
+
+	public void AbortLobby()
+	{
+		MyHUD.SwitchToMainMenu ();
+		CurGameState = Properties.GameState.Menu;
+		if(Network.isServer)
+			MasterServer.UnregisterHost();
+		if(HasNetworkConnection)
+			Network.Disconnect ();
+	}
 
     public void RequestHosts()
 	{
 		if(HasNetworkConnection) return;
+		_timeout = false;
 		MasterServer.RequestHostList(Properties.GameType);
-    }
+		StartCoroutine ("CCountdownTimeout");
+	}
+	
+	public IEnumerator CCountdownTimeout()
+	{
+		float _curTime = Properties.RequestHostTimeoutLength;
+
+		while (_curTime > 0f) 
+		{
+			yield return new WaitForEndOfFrame();
+			_curTime -= Time.deltaTime;
+		}
+
+		if (!HasNetworkConnection) 
+		{
+			_timeout = true;
+			MyHUD.SwitchToMainMenu();
+		}
+	}
 
     private void OnMasterServerEvent(MasterServerEvent msEvent)
 	{
+		if (_timeout) return;
+
 		if(msEvent == MasterServerEvent.HostListReceived)
 		{
 			HostData[] data = MasterServer.PollHostList();
@@ -129,22 +205,29 @@ public class GameController : MonoBehaviour
 
     private void OnConnectedToServer()
 	{
-		MyStatus = Properties.PlayerGameStatus.Player;
-		StartGame ();
+		CurGameState = Properties.GameState.Lobby;
+		MyHUD.SwitchToLobby ();
 	}
 	
 	void OnServerInitialized()
 	{
-		MyStatus = Properties.PlayerGameStatus.Host;
+		//
 	}
 
 	void OnPlayerConnected(NetworkPlayer player)
 	{
-		MasterServer.UnregisterHost();	//So no one tries to join while game is on going
-		StartGame ();
+		//
 	}
 
 	void OnPlayerDisconnected(NetworkPlayer player) 
+	{
+		if (Network.connections.Length == 1)
+			MyHUD.UpdateLobbyText (1);
+		else
+			MyHUD.PollConnectionsInfo ();
+	}
+
+	void OnDisconnectedFromServer(NetworkDisconnection info) 
 	{
 		RPCResetGame ();
 	}
@@ -155,14 +238,17 @@ public class GameController : MonoBehaviour
 		MasterServer.UnregisterHost();	//So the masterserver doesnt get confused when host disconnects before onplayerconnected is called for the first time
 		Network.Disconnect();
 
-		MyHUD.GameEnd ();
+		MyHUD.SwitchToMainMenu ();
 		CurGameState = Properties.GameState.Menu;
 		WeaponSpawnPlatform.SetWeaponPlatforms (false);
 		
-		foreach(GameObject Player in GameObject.FindGameObjectsWithTag("Player")) 
+		foreach(GameObject Player in Players) 
 			Destroy(Player);
-		foreach (GameObject Weapon in GameObject.FindGameObjectsWithTag ("Weapon"))
+		Players.Clear ();
+
+		foreach (GameObject Weapon in Weapons)
 			Destroy(Weapon);
+		Weapons.Clear ();
 	}
 
 	public void Respawn(float RespawnTime)
