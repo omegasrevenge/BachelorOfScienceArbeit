@@ -74,13 +74,15 @@ public class GameController : MonoBehaviour
 
 	public void StartGame()
 	{
+		if (!HasNetworkConnection) return; //otherwise Network.class gets confused, since you are technically not in a network yet but already want to send RPCs to start game
+
 		MasterServer.UnregisterHost();	//So no one tries to join while game is on going
 
 		if(CurMap == null)
 			Network.Instantiate (Resources.Load(SelectedMap), Vector3.zero, Quaternion.identity, 1);
 	}
 
-	public void ArenaSpawned()
+	public void ArenaSpawned() // called upon arena initialized and spawnpoints added, now spawnprocess can begin
 	{
 		networkView.RPC ("RPCSpawnOrder", RPCMode.AllBuffered, Network.connections);
 	}

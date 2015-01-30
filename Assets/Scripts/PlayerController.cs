@@ -11,6 +11,12 @@ public class PlayerController : MonoBehaviour
 	public Transform Lead;
 	[HideInInspector]
 	public Weapon MyWeapon;
+	[HideInInspector]
+	public Camera MyCamera;
+	[HideInInspector]
+	public MeshRenderer[] PlayerRenderer;
+
+	public float CurrentRecollorDuration = 0f;
 
 	public int Health = Properties.MaxPlayerHealth;
 
@@ -18,8 +24,13 @@ public class PlayerController : MonoBehaviour
 
 	public Transform WeaponAnchor;
 
+	private bool _gotHit = false;
+	private bool _gotRecollored = false;
+
 	void Start()
 	{
+		PlayerRenderer = gameObject.GetComponentsInChildren<MeshRenderer> ();
+
 		MyGameController = GameController.Singleton;
 
 		MyGameController.Players.Add (gameObject);
@@ -28,6 +39,27 @@ public class PlayerController : MonoBehaviour
 
 		MyGameController.MyPlayer = gameObject;
 		InitializePlayer ();
+	}
+
+	void Update()
+	{
+		if (_gotHit) 
+		{
+			_gotHit = false;
+			CurrentRecollorDuration = Properties.RecollorDurationAfterHit;
+			foreach(MeshRenderer rend in PlayerRenderer)
+				rend.material.color = Color.red;
+			_gotRecollored = true;
+		}
+
+		CurrentRecollorDuration -= Time.deltaTime;
+
+		if (_gotRecollored && CurrentRecollorDuration <= 0f) 
+		{
+			_gotRecollored = false;
+			foreach(MeshRenderer rend in PlayerRenderer)
+				rend.material.color = Color.white;
+		}
 	}
 
 	public void InitializePlayer()
@@ -43,7 +75,9 @@ public class PlayerController : MonoBehaviour
 
 		transform.FindChild ("Face").gameObject.SetActive (false);
 
-		transform.FindChild ("Camera").gameObject.SetActive (true);
+
+		MyCamera = transform.FindChild ("Camera").GetComponent<Camera> ();
+		MyCamera.gameObject.SetActive (true);
 
 		MyWeapon = ((GameObject)Network.Instantiate (Resources.Load ("Weapon"), WeaponAnchor.position, WeaponAnchor.rotation, 1)).GetComponent<Weapon>();
 		MyWeapon.transform.parent = WeaponAnchor;
@@ -66,6 +100,7 @@ public class PlayerController : MonoBehaviour
 	[RPC]
 	public void RPCGetHit(int Damage)
 	{
+		_gotHit = true;
 		Health -= Damage;
 
 		if (!networkView.isMine)
@@ -100,8 +135,6 @@ public class PlayerController : MonoBehaviour
 		float _dyingTime = Properties.DyingAnimationLength > 0.001f ? Properties.DyingAnimationLength : 0.001f;
 
 		float _curDyingTime = _dyingTime;
-
-		MeshRenderer[] myRenderers = gameObject.GetComponentsInChildren<MeshRenderer> ();
 	
 		foreach (GameObject weapon in MyGameController.Weapons) 
 		{
@@ -120,7 +153,7 @@ public class PlayerController : MonoBehaviour
 
 			_curDyingTime -= Time.deltaTime;
 
-			foreach(MeshRenderer rend in myRenderers)
+			foreach(MeshRenderer rend in PlayerRenderer)
 			{
 				Color _col = rend.material.color;
 				rend.material.color = new Color(_col.r, _col.g, _col.b, _curDyingTime / _dyingTime);
@@ -139,6 +172,7 @@ public class PlayerController : MonoBehaviour
 		{
 			Camera _myCam = gameObject.GetComponentInChildren<Camera> ();
 			_myCam.transform.parent = null;
+			_myCam.GetComponent<MouseLook>().enabled = false;
 
 			MyGameController.DestroyCamera = true;
 			MyGameController.Respawn(Properties.RespawnTimer);

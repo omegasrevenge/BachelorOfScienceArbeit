@@ -47,11 +47,16 @@ public class MouseLook : MonoBehaviour {
 		}
 		else
 		{
-			rotationY += Input.GetAxis("Mouse Y") * sensitivityY;
+			RotateY(Input.GetAxis("Mouse Y") * sensitivityY);
 			rotationY = Mathf.Clamp (rotationY, minimumY, maximumY);
 			
 			transform.localEulerAngles = new Vector3(-rotationY, transform.localEulerAngles.y, 0);
 		}
+	}
+
+	public void RotateY(float value)
+	{
+		rotationY += value;
 	}
 	
 	void Start ()
