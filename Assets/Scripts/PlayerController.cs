@@ -10,11 +10,34 @@ public class PlayerController : MonoBehaviour
 	[HideInInspector]
 	public Transform Lead;
 	[HideInInspector]
-	public Weapon MyWeapon;
-	[HideInInspector]
 	public Camera MyCamera;
 	[HideInInspector]
 	public MeshRenderer[] PlayerRenderer;
+
+	public Weapon MyWeapon
+	{
+		get
+		{
+			if(_myWeapon == null)
+			{
+				foreach(GameObject weapon in GameController.Singleton.Weapons)
+				{
+					if(weapon.networkView.owner == networkView.owner)
+					{
+						_myWeapon = weapon.GetComponent<Weapon>();
+						break;
+					}
+				}
+			}
+			return _myWeapon;
+		}
+		set
+		{
+			_myWeapon = value;
+		}
+	}
+
+	private Weapon _myWeapon;
 
 	public float CurrentRecollorDuration = 0f;
 
@@ -81,14 +104,13 @@ public class PlayerController : MonoBehaviour
 
 		MyWeapon = ((GameObject)Network.Instantiate (Resources.Load ("Weapon"), WeaponAnchor.position, WeaponAnchor.rotation, 1)).GetComponent<Weapon>();
 		MyWeapon.transform.parent = WeaponAnchor;
-		MyWeapon.PickupNew(0, 0, 0);
+		MyWeapon.PickupDefault ();
 
 	}
 
 	public void PickupWeapon(int WeaponType, int AmmunitionType, int SecondaryEffect)
 	{
-		if(networkView.isMine)
-			MyWeapon.PickupNew (WeaponType, AmmunitionType, SecondaryEffect);
+		MyWeapon.PickupNew (WeaponType, AmmunitionType, SecondaryEffect);
 	}
 
 	public void GetHit(int Damage)
@@ -101,12 +123,12 @@ public class PlayerController : MonoBehaviour
 	public void RPCGetHit(int Damage)
 	{
 		_gotHit = true;
-		Health -= Damage;
+		Health = Mathf.Clamp (Health - Damage, 0, Properties.MaxPlayerHealth);
 
 		if (!networkView.isMine)
 						return;
 
-		if (Health <= 0) Die ();
+		if (Health == 0) Die ();
 		//Health is given to the UI
 	}
 

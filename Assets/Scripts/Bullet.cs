@@ -3,53 +3,64 @@ using System.Collections;
 
 public class Bullet : MonoBehaviour 
 {
-	public float _liveTime = 0f;
+	public float LifeTime = 0f;
+
+	public int MaxBounceCount = 1;
+	public int CurrentBounceCount = 0;
 
 	public Properties.WeaponTypeEnum WeaponType;
+	public Properties.AmmunitionTypeEnum AmmunitionType;
+	public Properties.SecondaryEffectEnum SecondaryEffect;
 
 	private bool _gettingDestroyed = false;
 
-	public Properties MyProps
-	{
-		get
-		{
-			return GameController.Singleton.MyProperties;
-		}
-	}
-
 	void Start () 
 	{
-		if (!networkView.isMine)
-						enabled = false;
+		enabled = networkView.isMine;
 	}
 
 	void Update()
 	{
-		_liveTime += Time.deltaTime;
-		if(transform.position.y < -501f)
+		LifeTime -= Time.deltaTime;
+		if (LifeTime <= 0f) 
+		{
+			_gettingDestroyed = true;
 			Network.Destroy (networkView.viewID);
+		}
 	}
 
-	public void Initialize(int WeaponType)
+	public void Initialize(int WeaponType, int AmmunitionType, int SecondaryEffect)
 	{
-		networkView.RPC ("RPCInitialized", RPCMode.AllBuffered, WeaponType);
+		networkView.RPC ("RPCInitialized", RPCMode.AllBuffered, WeaponType, AmmunitionType, SecondaryEffect);
 	}
 
 	[RPC]
-	public void RPCInitialized(int WeaponType)
+	public void RPCInitialized(int WeaponType, int AmmunitionType, int SecondaryEffect)
 	{
 		GameObject BulletModel = (GameObject)Instantiate (
-			Resources.Load (Properties.BulletModelFolder + "/" + MyProps.BulletModelNames [WeaponType]),
+			Resources.Load (Properties.BulletModelFolder + "/" + Properties.Singleton.BulletModelNames [WeaponType]),
 			transform.position,
-			transform.rotation);
+			transform.rotation); 
 
 		BulletModel.transform.parent = transform;
 		this.WeaponType = (Properties.WeaponTypeEnum)WeaponType;
-
+		this.AmmunitionType = (Properties.AmmunitionTypeEnum)AmmunitionType;
+		this.SecondaryEffect = (Properties.SecondaryEffectEnum)SecondaryEffect;
+		
 		Rigidbody myBody = gameObject.AddComponent<Rigidbody> ();
 		myBody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-		myBody.useGravity = MyProps.BulletsUseGravity [WeaponType];
-		myBody.mass = MyProps.BulletMass [WeaponType];
+		myBody.useGravity = this.SecondaryEffect == Properties.SecondaryEffectEnum.Heavy ? true : Properties.Singleton.BulletsUseGravity [WeaponType];
+		myBody.mass = Properties.Singleton.BulletMass [WeaponType];
+
+		LifeTime = Properties.Singleton.BulletDefaultLifetime [WeaponType] 
+					* Properties.Singleton.BulletAmmunitionTypeLifetimeModifier [AmmunitionType] 
+					* Properties.Singleton.BulletSecondaryEffectLifetimeModifier [SecondaryEffect];
+
+		foreach (MeshRenderer rend in gameObject.GetComponentsInChildren<MeshRenderer>())
+						rend.material.color = Properties.Singleton.BulletColors [AmmunitionType];
+
+		if ((Properties.AmmunitionTypeEnum)AmmunitionType == Properties.AmmunitionTypeEnum.Bouncy)
+						MaxBounceCount = Properties.Singleton.BouncyMaxBounceCount [WeaponType];
 	}
 
 	public void GetShot(Vector3 TargetPos)
@@ -57,7 +68,11 @@ public class Bullet : MonoBehaviour
 		if(TargetPos != Vector3.zero)
 			transform.LookAt (TargetPos); // zero means the raycast hit nothing. Should never happen, but the skybox, for example, cannot be hit by it.
 
-		GetComponent<Rigidbody> ().AddForce (transform.forward * MyProps.BulletFlyingSpeed [(int)WeaponType], ForceMode.Impulse);  //FLYING SPEED!
+		GetComponent<Rigidbody> ().AddForce (
+			transform.forward 
+			* Properties.Singleton.BulletFlyingSpeed [(int)WeaponType]
+			* (SecondaryEffect == Properties.SecondaryEffectEnum.Heavy ? Properties.Singleton.HeavyEffectSpeedMultiplier[(int)WeaponType] : 1f), 
+			ForceMode.Impulse);
 	}
 
 	public void OnCollisionEnter(Collision collision)
@@ -66,12 +81,32 @@ public class Bullet : MonoBehaviour
 		if (!networkView.isMine) return;
 		if (collision.collider.transform.parent != null && collision.collider.transform.parent.tag == "Bullet") return;
 
-		// LIFETIME AND ON HIT EFFECT!
-
 		if (collision.collider.gameObject.layer == Properties.AvatarLayer) 
-			collision.collider.transform.parent.GetComponent<PlayerController> ().GetHit (5); //DAMAGE!
+		{
+			int _damage = Mathf.RoundToInt (Properties.Singleton.BulletDamage [(int)WeaponType] 
+			                                * (AmmunitionType == Properties.AmmunitionTypeEnum.Shrapnel ? Properties.ShrapnelEffectBulletDamageMultiplier : 1f)
+			                                * (AmmunitionType == Properties.AmmunitionTypeEnum.Explosive ? Properties.ExplosionEffectBulletDamageMultiplier : 1f)
+			                                * (SecondaryEffect == Properties.SecondaryEffectEnum.Delay ? Properties.DelayEffectDamageMultiplier : 1f)
+			                                * (SecondaryEffect == Properties.SecondaryEffectEnum.Heavy ? Properties.HeavyEffectDamageMultiplier : 1f));
 
-		Network.Destroy (networkView.viewID);
-		_gettingDestroyed = true;
+			if(SecondaryEffect == Properties.SecondaryEffectEnum.Healing && collision.collider.transform.parent.networkView.isMine)
+				_damage *= -1;
+
+			collision.collider.transform.parent.GetComponent<PlayerController> ().GetHit (_damage);
+		}
+		
+		if (AmmunitionType == Properties.AmmunitionTypeEnum.Shrapnel)
+			Shrapnel.CreateAt (transform, (int)WeaponType, (int)AmmunitionType, (int)SecondaryEffect);
+
+		if (AmmunitionType == Properties.AmmunitionTypeEnum.Explosive)
+						Explosion.CreateAt (transform.GetChild(0), (int)WeaponType, (int)SecondaryEffect);
+
+		CurrentBounceCount++;
+
+		if (CurrentBounceCount >= MaxBounceCount) 
+		{
+			Network.Destroy (networkView.viewID);
+			_gettingDestroyed = true;
+		}
 	}
 }

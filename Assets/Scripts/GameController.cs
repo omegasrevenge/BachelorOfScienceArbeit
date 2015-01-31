@@ -26,18 +26,6 @@ public class GameController : MonoBehaviour
 	public int TotalConnectionNumber = 0;
 
 	private bool _timeout = true;
-	
-	private Properties _props;
-
-	public Properties MyProperties
-	{
-		get
-		{
-			if(_props == null)
-				_props = GetComponent<Properties>();
-			return _props;
-		}
-	}
 
 	public HUDController MyHUD
 	{
