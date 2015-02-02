@@ -12,23 +12,6 @@ public class Properties : MonoBehaviour
 		Singleton = this;
 	}
 
-	void Update()
-	{
-		if (UpdateNow) 
-		{
-			UpdateNow = false;
-			networkView.RPC("UpdateValues", RPCMode.AllBuffered, WeaponAttackSpeedValues, BulletFlyingSpeed);
-		}
-	}
-
-	[RPC]
-	public void UpdateValues(float[] val1, float[] val2)
-	{
-		//WeaponAttackSpeedValues = val1;
-		//BulletFlyingSpeed = val2;
-		//Debug.Log ("UPDATED VALUES!");
-	}
-
 	// PLAYER //
 	public const int MaxPlayerHealth = 100;
 	public const float DyingAnimationLength = 3f;
@@ -46,10 +29,11 @@ public class Properties : MonoBehaviour
 	public readonly float[] WeaponRightingAfterShotSpeed = new float[]{3f, 2f, 4f, 1f, 1f, 0.33f};
 	public enum ShootingMode{Default, Cone} //default means it shoots one bullet forwards, cone means it shoots several bullets in slightly different angles (e.g. shotgun)
 	public readonly ShootingMode[] WeaponShootingModes = new ShootingMode[]{ShootingMode.Default, ShootingMode.Default, ShootingMode.Default, ShootingMode.Cone, ShootingMode.Default, ShootingMode.Default};
-	public const float AccuracyMaxDecay = 0.4f;
-	public readonly float[] AccuracyDecay = new float[]{0.03f, 0.1f, 0.005f, 0.2f, 0.1f, 0.175f};
+	public const float AccuracyMaxDecay = 0.3f;
+	public readonly float[] AccuracyDecay = new float[]{0.03f, 0.05f, 0.0025f, 0.2f, 0.1f, 0.175f};
 	public readonly float[] WeaponTargetingSpeed = new float[]{0.2f, 0.3f, 0.2f, 0.2f, 0.5f, 2f}; //how much accuracy is restored per second (in percent of screen)
 	public readonly Color[] WeaponColors = new Color[]{Color.white, Color.green, Color.blue, Color.grey}; //Depends on SecondaryEffect
+	public readonly int[] WeaponAmmunitionAmount = new int[]{0, 20, 50, 10, 10, 5};
 	////////////
 
 	// BULLET //
@@ -57,19 +41,19 @@ public class Properties : MonoBehaviour
 	public enum SecondaryEffectEnum{None, Healing, Heavy, Delay, Length}
 	public const string BulletModelFolder = "BulletModels";
 	public readonly string[] BulletModelNames = new string[]{"DefaultBulletModel", "RifleBulletModel", "MachinegunBulletModel", "ShotgunBulletModel", "SniperBulletModel", "BazookaBulletModel"};
-	public readonly int[] BulletDamage = new int[]{5, 10, 3, 3, 15, 30};
-	public readonly float[] WeaponAttackSpeedValues = new float[]{0f, 0f, 0.1f, 1.5f, 1f, 3f};
-	public readonly float[] BulletFlyingSpeed = new float[]{800, 1200f, 1000f, 800f, 1500f, 600f};
+	public readonly int[] BulletDamage = new int[]{10, 25, 10, 12, 35, 50};
+	public readonly float[] WeaponAttackSpeedValues = new float[]{0f, 0f, 0.1f, 1f, 1f, 3f};
+	public readonly float[] BulletFlyingSpeed = new float[]{1000f, 2400f, 2000f, 1200f, 1500f, 800f};
 	public readonly bool[] BulletsUseGravity = new bool[]{false, false, false, false, false, true};
 	public readonly int[] BulletMass = new int[]{1, 1, 1, 1, 1, 2};
 	public readonly float[] BulletDefaultLifetime = new float[]{5f, 3f, 2f, 1f, 5f, 5f};
-	public readonly float[] BulletAmmunitionTypeLifetimeModifier = new float[]{1f, 2f, 0.75f, 0.5f};
+	public readonly float[] BulletAmmunitionTypeLifetimeModifier = new float[]{1f, 20f, 0.75f, 0.5f};
 	public readonly float[] BulletSecondaryEffectLifetimeModifier = new float[]{1f, 1f, 2f, 1f};
 	public readonly Color[] BulletColors = new Color[]{Color.white, Color.cyan, Color.black, Color.red}; //Depends on AmmunitionType
 	public readonly float[] ShrapnelSize = new float[]{0f, 2f, 1f, 0f, 3f, 0f};
-	public readonly float[] ShrapnelLifeTime = new float[]{0f, 0.2f, 0.1f, 0f, 0.5f, 0f};
-	public readonly float[] ShrapnelDamage = new float[]{0f, 0.5f, 0.5f, 0f, 0.8f, 0f}; //Multiplied by Bullet Damage at that time
-	public const float ShrapnelEffectBulletDamageMultiplier = 0.5f;
+	public readonly float[] ShrapnelLifeTime = new float[]{0f, 0.3f, 0.15f, 0f, 0.75f, 0f};
+	public readonly float[] ShrapnelDamage = new float[]{0f, 0.2f, 0.2f, 0f, 0.3f, 0f}; //Multiplied by Bullet Damage at that time
+	public const float ShrapnelEffectBulletDamageMultiplier = 0.75f;
 	public const float ShrapnelFlyingSpeed = 1500f;
 	public readonly int[] BouncyMaxBounceCount = new int[]{0, 5, 3, 2, 10, 0};
 	public readonly float[] HeavyEffectSpeedMultiplier = new float[]{0f, 0.5f, 0.5f, 0.5f, 0.5f, 0f};
@@ -145,9 +129,14 @@ public class Properties : MonoBehaviour
 	public const string GameType = "BachelorOfScience.SalzmannKirill.MDH2015";
 	public const int Port = 43654;
 	public const string GameName = "BachelorOfScienceSalzmannKirill";
-	public const float RequestHostTimeoutLength = 10f;
+	public const float RequestHostTimeoutLength = 30f;
 	public const float GameStartTimer = 5f;
 	/////////////////////
+
+	// UI //
+	public const float CrosshairLerpSpeed = 5f;
+	public readonly Vector2 UIDimensions = new Vector2 (640f, 480f);
+	////////
 
 	public class AllowedWeaponEffectCombinations
 	{

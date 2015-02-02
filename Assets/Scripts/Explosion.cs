@@ -12,6 +12,7 @@ public class Explosion : MonoBehaviour
 	public Properties.SecondaryEffectEnum SecondaryEffect;
 
 	private MeshRenderer _renderer;
+	private bool _initialized = false;
 
 	void Start()
 	{
@@ -20,6 +21,8 @@ public class Explosion : MonoBehaviour
 	
 	void Update()
 	{
+		if (!_initialized) return;
+
 		transform.localScale = Vector3.Lerp (transform.localScale, EndScale, Time.deltaTime * ScalingSpeed);
 
 		_renderer.material.color = new Color (_renderer.material.color.r, _renderer.material.color.g, _renderer.material.color.b, CurLifeTime/LifeTime);
@@ -33,18 +36,30 @@ public class Explosion : MonoBehaviour
 	public static void CreateAt(Transform target, int WeaponType, int SecondaryEffect)
 	{
 		Explosion _explosion = ((GameObject)Network.Instantiate (Resources.Load ("Explosion"), target.position, target.rotation, 1)).GetComponent<Explosion>();
-		
-		_explosion.Damage = Properties.Singleton.ExplosionDamage [WeaponType] 
-				* Properties.Singleton.BulletDamage [WeaponType] 
-				* Properties.ExplosionEffectBulletDamageMultiplier
-				* ((Properties.SecondaryEffectEnum)SecondaryEffect == Properties.SecondaryEffectEnum.Delay ? Properties.DelayEffectDamageMultiplier : 1f)
-				* ((Properties.SecondaryEffectEnum)SecondaryEffect == Properties.SecondaryEffectEnum.Heavy ? Properties.HeavyEffectDamageMultiplier : 1f);
 
-		_explosion.EndScale = target.localScale * Properties.Singleton.ExplosionEndSize[WeaponType];
-		_explosion.LifeTime = Properties.ExplosionLifeTime;
-		_explosion.ScalingSpeed = 1f / Properties.ExplosionLifeTime;
-		_explosion.SecondaryEffect = (Properties.SecondaryEffectEnum)SecondaryEffect;
-		_explosion.CurLifeTime = Properties.ExplosionLifeTime;
+		_explosion.networkView.RPC ("RPCInitialize", 
+		                RPCMode.AllBuffered, 
+		                 Properties.Singleton.ExplosionDamage [WeaponType] 
+								* Properties.Singleton.BulletDamage [WeaponType] 
+								* Properties.ExplosionEffectBulletDamageMultiplier
+								* ((Properties.SecondaryEffectEnum)SecondaryEffect == Properties.SecondaryEffectEnum.Delay ? Properties.DelayEffectDamageMultiplier : 1f)
+								* ((Properties.SecondaryEffectEnum)SecondaryEffect == Properties.SecondaryEffectEnum.Heavy ? Properties.HeavyEffectDamageMultiplier : 1f),
+		                target.localScale * Properties.Singleton.ExplosionEndSize [WeaponType],
+		                Properties.ExplosionLifeTime,
+		                1f / Properties.ExplosionLifeTime,
+		                SecondaryEffect);
+	}
+
+	[RPC]
+	public void RPCInitialize(float Damage, Vector3 EndScale, float LifeTime, float ScalingSpeed, int SecondaryEffect)
+	{
+		this.Damage = Damage;
+		this.EndScale = EndScale;
+		this.LifeTime = LifeTime;
+		this.ScalingSpeed = ScalingSpeed;
+		this.SecondaryEffect = (Properties.SecondaryEffectEnum)SecondaryEffect;
+		this.CurLifeTime = LifeTime;
+		_initialized = true;
 	}
 	
 	void OnTriggerEnter(Collider Info)

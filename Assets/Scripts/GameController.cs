@@ -19,6 +19,8 @@ public class GameController : MonoBehaviour
 	[HideInInspector]
 	public List<GameObject> Weapons = new List<GameObject>();
 	[HideInInspector]
+	public List<GameObject> WeaponSpawnPlatforms = new List<GameObject>();
+	[HideInInspector]
 	public GameObject CurMap;
 
 	public string SelectedMap = "MapSmallArena";
@@ -203,7 +205,7 @@ public class GameController : MonoBehaviour
 		if(msEvent == MasterServerEvent.HostListReceived)
 		{
 			HostData[] data = MasterServer.PollHostList();
-			if(data.Length>0) Network.Connect(data[0]);
+			if(data.Length>0) Network.Connect(data[data.Length-1]);
 		}
     }
 

@@ -20,16 +20,21 @@ public class Shrapnel : MonoBehaviour
 	public static void CreateAt(Transform target, int WeaponType, int AmmunitionType, int SecondaryEffect)
 	{
 		GameObject _shrapnel = (GameObject)Network.Instantiate (Resources.Load ("Shrapnel"), target.position, target.rotation, 1);
-		_shrapnel.GetComponent<Shrapnel>().networkView.RPC ("RPCScale", RPCMode.AllBuffered, Properties.Singleton.ShrapnelSize [WeaponType]);
-		_shrapnel.GetComponent<Shrapnel>().LifeTime = Properties.Singleton.ShrapnelLifeTime [WeaponType];
-		ShrapnelPiece[] _pieces = _shrapnel.GetComponentsInChildren<ShrapnelPiece> ();
-		foreach (ShrapnelPiece piece in _pieces)
-			piece.Initialize(WeaponType, AmmunitionType, SecondaryEffect);
+		_shrapnel.GetComponent<Shrapnel>().networkView.RPC ("RPCInitialize", 
+		                                                    RPCMode.AllBuffered, 
+		                                                    WeaponType, 
+		                                                    AmmunitionType, 
+		                                                    SecondaryEffect, 
+		                                                    Properties.Singleton.ShrapnelSize [WeaponType]);
 	}
 
 	[RPC]
-	public void RPCScale(float ScaleModifier)
+	public void RPCInitialize(int WeaponType, int AmmunitionType, int SecondaryEffect, float ScaleModifier)
 	{
+		GetComponent<Shrapnel>().LifeTime = Properties.Singleton.ShrapnelLifeTime [WeaponType];
+		ShrapnelPiece[] _pieces = GetComponentsInChildren<ShrapnelPiece> ();
+		foreach (ShrapnelPiece piece in _pieces)
+			piece.Initialize(WeaponType, AmmunitionType, SecondaryEffect);
 		transform.localScale *= ScaleModifier;
 	}
 }

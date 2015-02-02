@@ -16,7 +16,7 @@ public class WeaponSpawnPlatform : MonoBehaviour
 
 	public static void SetWeaponPlatforms(bool state)
 	{
-		foreach (GameObject platform in GameObject.FindGameObjectsWithTag("WeaponSpawnPlatform")) 
+		foreach (GameObject platform in GameController.Singleton.WeaponSpawnPlatforms) 
 		{
 			WeaponSpawnPlatform MyPlatform = platform.GetComponent<WeaponSpawnPlatform> ();
 			MyPlatform.Working = state;
@@ -27,7 +27,7 @@ public class WeaponSpawnPlatform : MonoBehaviour
 		}
 	}
 
-	void FixedUpdate () 
+	void Update () 
 	{
 		WeaponPivot.transform.localEulerAngles += new Vector3 (0f, Properties.Singleton.RotationSpeed*Time.deltaTime, 0f);
 
@@ -35,7 +35,7 @@ public class WeaponSpawnPlatform : MonoBehaviour
 		{
 			Timer += Time.deltaTime;
 
-			if(Timer >= Properties.WeaponSpawnTime)
+			if(Timer >= GameController.Singleton.WeaponSpawnPlatforms.Count / (Network.connections.Length + 1) * Properties.WeaponSpawnTime)
 			{
 				Timer = 0f;
 				int WeaponType = Random.Range(1, ((int)Properties.WeaponTypeEnum.Length));

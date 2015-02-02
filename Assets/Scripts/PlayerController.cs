@@ -40,8 +40,8 @@ public class PlayerController : MonoBehaviour
 	private Weapon _myWeapon;
 
 	public float CurrentRecollorDuration = 0f;
-
-	public int Health = Properties.MaxPlayerHealth;
+	
+	private int Health;
 
 	public bool Dead = false;
 
@@ -49,9 +49,11 @@ public class PlayerController : MonoBehaviour
 
 	private bool _gotHit = false;
 	private bool _gotRecollored = false;
+	private Color _myHitColor;
 
 	void Start()
 	{
+		Health = Properties.MaxPlayerHealth;
 		PlayerRenderer = gameObject.GetComponentsInChildren<MeshRenderer> ();
 
 		MyGameController = GameController.Singleton;
@@ -62,6 +64,7 @@ public class PlayerController : MonoBehaviour
 
 		MyGameController.MyPlayer = gameObject;
 		InitializePlayer ();
+		HUDController.Singleton.HealthCounter.text = Health.ToString ();
 	}
 
 	void Update()
@@ -71,7 +74,7 @@ public class PlayerController : MonoBehaviour
 			_gotHit = false;
 			CurrentRecollorDuration = Properties.RecollorDurationAfterHit;
 			foreach(MeshRenderer rend in PlayerRenderer)
-				rend.material.color = Color.red;
+				rend.material.color = _myHitColor;
 			_gotRecollored = true;
 		}
 
@@ -124,12 +127,14 @@ public class PlayerController : MonoBehaviour
 	{
 		_gotHit = true;
 		Health = Mathf.Clamp (Health - Damage, 0, Properties.MaxPlayerHealth);
+		_myHitColor = Damage < 0f ? Color.green : Color.red;
 
 		if (!networkView.isMine)
 						return;
 
 		if (Health == 0) Die ();
-		//Health is given to the UI
+
+		HUDController.Singleton.HealthCounter.text = Health.ToString ();
 	}
 
 	public void Die()
@@ -192,9 +197,8 @@ public class PlayerController : MonoBehaviour
 
 		if (networkView.isMine) 
 		{
-			Camera _myCam = gameObject.GetComponentInChildren<Camera> ();
-			_myCam.transform.parent = null;
-			_myCam.GetComponent<MouseLook>().enabled = false;
+			MyCamera.transform.parent = null;
+			MyCamera.GetComponent<MouseLook>().enabled = false;
 
 			MyGameController.DestroyCamera = true;
 			MyGameController.Respawn(Properties.RespawnTimer);

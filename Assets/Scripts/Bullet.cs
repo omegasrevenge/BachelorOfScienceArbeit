@@ -22,7 +22,7 @@ public class Bullet : MonoBehaviour
 	void Update()
 	{
 		LifeTime -= Time.deltaTime;
-		if (LifeTime <= 0f) 
+		if ((LifeTime <= 0f && AmmunitionType != Properties.AmmunitionTypeEnum.Bouncy) || transform.position.y < -1000f)
 		{
 			_gettingDestroyed = true;
 			Network.Destroy (networkView.viewID);
@@ -75,13 +75,23 @@ public class Bullet : MonoBehaviour
 			ForceMode.Impulse);
 	}
 
-	public void OnCollisionEnter(Collision collision)
+	public void OnTriggerEnter(Collider target)
+	{
+		Hit (target);
+	}
+
+	public void OnCollisionEnter(Collision target)
+	{
+		Hit (target.collider);
+	}
+
+	public void Hit(Collider other)
 	{
 		if (_gettingDestroyed) return;
 		if (!networkView.isMine) return;
-		if (collision.collider.transform.parent != null && collision.collider.transform.parent.tag == "Bullet") return;
+		if (other.transform.parent != null && other.transform.parent.tag == "Bullet") return;
 
-		if (collision.collider.gameObject.layer == Properties.AvatarLayer) 
+		if (other.gameObject.layer == Properties.AvatarLayer) 
 		{
 			int _damage = Mathf.RoundToInt (Properties.Singleton.BulletDamage [(int)WeaponType] 
 			                                * (AmmunitionType == Properties.AmmunitionTypeEnum.Shrapnel ? Properties.ShrapnelEffectBulletDamageMultiplier : 1f)
@@ -89,10 +99,10 @@ public class Bullet : MonoBehaviour
 			                                * (SecondaryEffect == Properties.SecondaryEffectEnum.Delay ? Properties.DelayEffectDamageMultiplier : 1f)
 			                                * (SecondaryEffect == Properties.SecondaryEffectEnum.Heavy ? Properties.HeavyEffectDamageMultiplier : 1f));
 
-			if(SecondaryEffect == Properties.SecondaryEffectEnum.Healing && collision.collider.transform.parent.networkView.isMine)
+			if(SecondaryEffect == Properties.SecondaryEffectEnum.Healing && other.transform.parent.networkView.isMine)
 				_damage *= -1;
 
-			collision.collider.transform.parent.GetComponent<PlayerController> ().GetHit (_damage);
+			other.transform.parent.GetComponent<PlayerController> ().GetHit (_damage);
 		}
 		
 		if (AmmunitionType == Properties.AmmunitionTypeEnum.Shrapnel)

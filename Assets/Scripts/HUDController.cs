@@ -9,6 +9,11 @@ public class HUDController : MonoBehaviour
 	public GameObject MainMenu;
 	public GameObject Lobby;
 	public GameObject WaitingForServer;
+	public GameObject InGameUI;
+
+	public Crosshair MyCrosshair;
+	public Text AmmunitionCounter;
+	public Text HealthCounter;
 
 	private Text _myLobbyText;
 	private string _lobbyText;
@@ -32,12 +37,14 @@ public class HUDController : MonoBehaviour
 	{
 		MainMenu.SetActive (false);
 		Lobby.SetActive (true);
+		InGameUI.SetActive (false);
 		MyGameController.CreateGame ();
 	}
 
 	public void GameJoin()
 	{
 		MainMenu.SetActive (false);
+		InGameUI.SetActive (false);
 		WaitingForServer.SetActive (true);
 		MyGameController.RequestHosts ();
 	}
@@ -46,6 +53,7 @@ public class HUDController : MonoBehaviour
 	{
 		_myLobbyText.text = _lobbyText; //if you are client, then leave and open your own game, this does not get otherwise reset
 		WaitingForServer.SetActive (false);
+		InGameUI.SetActive (false);
 		Lobby.SetActive (true);
 		PollConnectionsInfo ();
 		Lobby.transform.FindChild ("StartGame").gameObject.SetActive (Network.isServer);
@@ -53,6 +61,7 @@ public class HUDController : MonoBehaviour
 
 	public void SwitchToMainMenu()
 	{
+		InGameUI.SetActive (false);
 		WaitingForServer.SetActive (false);
 		Lobby.SetActive (false);
 		MainMenu.SetActive (true);
@@ -63,6 +72,7 @@ public class HUDController : MonoBehaviour
 		MainMenu.SetActive (false);
 		Lobby.SetActive (false);
 		WaitingForServer.SetActive (false);
+		InGameUI.SetActive (true);
 	}
 
 	public void CloseGame()

@@ -21,6 +21,7 @@ public class Weapon : MonoBehaviour
 	private float _curAccuracy;
 	public int AmmunitionCount;
 	public int Damage;
+	public int CurAmmunition;
 
 	private float _timerSinceLastAttack = 0f;
 	private Properties MyProperties;
@@ -30,10 +31,15 @@ public class Weapon : MonoBehaviour
 	{
 		GameController.Singleton.Weapons.Add (gameObject);
 		enabled = networkView.isMine;
+		if (networkView.isMine)
+			HUDController.Singleton.MyCrosshair.MyWeapon = this;
 	}
 
 	void Update()
 	{
+		if (CurAmmunition <= 0 && WeaponType != Properties.WeaponTypeEnum.Default)
+				PickupDefault ();
+
 		_timerSinceLastAttack += Time.deltaTime;
 
 		if(!Input.GetMouseButton (0))
@@ -102,10 +108,20 @@ public class Weapon : MonoBehaviour
 		_shootOnlyOnPress = Properties.Singleton.WeaponAttackSpeedValues [WeaponType] < 0.01f;
 		foreach (MeshRenderer rend in WeaponModel.GetComponentsInChildren<MeshRenderer>())
 			rend.material.color = Properties.Singleton.WeaponColors[SecondaryEffect];
+		CurAmmunition = Properties.Singleton.WeaponAmmunitionAmount [WeaponType];
+		if(networkView.isMine)
+			HUDController.Singleton.AmmunitionCounter.text = CurAmmunition.ToString();
 	}
 
 	public void Shoot()
 	{
+		if (GameController.Singleton.MyPlayer.GetComponent<PlayerController> ().Dead) 
+			return;
+
+		CurAmmunition = Mathf.Max (CurAmmunition - 1, 0);
+		if(networkView.isMine)
+			HUDController.Singleton.AmmunitionCounter.text = CurAmmunition.ToString();
+
 		Ray Crosshair = GameController.Singleton.MyPlayer.transform
 			.FindChild("Camera").GetComponent<Camera>()
 				.ViewportPointToRay(new Vector3(
