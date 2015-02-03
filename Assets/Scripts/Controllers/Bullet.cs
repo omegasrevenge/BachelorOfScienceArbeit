@@ -3,6 +3,7 @@ using System.Collections;
 
 public class Bullet : MonoBehaviour 
 {
+	public float MaxLifeTime = 0f;
 	public float LifeTime = 0f;
 
 	public int MaxBounceCount = 1;
@@ -56,6 +57,8 @@ public class Bullet : MonoBehaviour
 					* Properties.Singleton.BulletAmmunitionTypeLifetimeModifier [AmmunitionType] 
 					* Properties.Singleton.BulletSecondaryEffectLifetimeModifier [SecondaryEffect];
 
+		MaxLifeTime = LifeTime;
+
 		foreach (MeshRenderer rend in gameObject.GetComponentsInChildren<MeshRenderer>())
 						rend.material.color = Properties.Singleton.BulletColors [AmmunitionType];
 
@@ -87,6 +90,10 @@ public class Bullet : MonoBehaviour
 
 	public void Hit(Collider other)
 	{
+		if (other.gameObject.layer == Properties.AvatarLayer 
+		    && other.transform.parent.GetComponent<PlayerController> ().networkView.isMine
+		    && LifeTime > (MaxLifeTime - Properties.BulletAbleToHitDelay))
+			return;
 		if (_gettingDestroyed) return;
 		if (!networkView.isMine) return;
 		if (other.transform.parent != null && other.transform.parent.tag == "Bullet") return;
@@ -102,7 +109,7 @@ public class Bullet : MonoBehaviour
 			if(SecondaryEffect == Properties.SecondaryEffectEnum.Healing && other.transform.parent.networkView.isMine)
 				_damage *= -1;
 
-			other.transform.parent.GetComponent<PlayerController> ().GetHit (_damage);
+			other.transform.parent.GetComponent<PlayerController> ().GetHit (_damage, GameController.GetUserEntry(networkView.owner).ID, (int)WeaponType, (int)AmmunitionType, true);
 		}
 		
 		if (AmmunitionType == Properties.AmmunitionTypeEnum.Shrapnel)

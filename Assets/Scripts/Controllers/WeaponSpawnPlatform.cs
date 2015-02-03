@@ -12,30 +12,15 @@ public class WeaponSpawnPlatform : MonoBehaviour
 	[HideInInspector]
 	public int MyWeaponType;
 
-	public bool Working = false;
-
-	public static void SetWeaponPlatforms(bool state)
-	{
-		foreach (GameObject platform in GameController.Singleton.WeaponSpawnPlatforms) 
-		{
-			WeaponSpawnPlatform MyPlatform = platform.GetComponent<WeaponSpawnPlatform> ();
-			MyPlatform.Working = state;
-			MyPlatform.Timer = 0f;
-			
-			if(MyPlatform.MyWeapon != null)
-				Destroy(MyPlatform.MyWeapon);
-		}
-	}
-
 	void Update () 
 	{
-		WeaponPivot.transform.localEulerAngles += new Vector3 (0f, Properties.Singleton.RotationSpeed*Time.deltaTime, 0f);
+		WeaponPivot.transform.localEulerAngles += new Vector3 (0f, Properties.PlatformWeaponRotationSpeed*Time.deltaTime, 0f);
 
-		if (Working && MyWeapon == null) 
+		if (networkView.isMine && MyWeapon == null) 
 		{
 			Timer += Time.deltaTime;
 
-			if(Timer >= GameController.Singleton.WeaponSpawnPlatforms.Count / (Network.connections.Length + 1) * Properties.WeaponSpawnTime)
+			if(Timer >= (GameController.Singleton.WeaponSpawnPlatforms.Count * Properties.WeaponSpawnTime) / GameController.Singleton.Users.Count)
 			{
 				Timer = 0f;
 				int WeaponType = Random.Range(1, ((int)Properties.WeaponTypeEnum.Length));
@@ -72,14 +57,14 @@ public class WeaponSpawnPlatform : MonoBehaviour
 
 	public void OnTriggerStay(Collider other)
 	{
-		if (!Network.isServer) return;
+		if (!networkView.isMine) return;
 
 		if (other.collider.gameObject.layer == Properties.AvatarLayer && MyWeapon != null) 
 		{
 			int AmmunitionType = (int)Weapon.ChooseAmmunitionType((Properties.WeaponTypeEnum)MyWeaponType);
 			int SecondaryEffect = (int)Weapon.ChooseSecondaryEffect((Properties.WeaponTypeEnum)MyWeaponType, (Properties.AmmunitionTypeEnum)AmmunitionType);
 
-			other.transform.parent.GetComponent<PlayerController>().PickupWeapon(MyWeaponType, AmmunitionType, SecondaryEffect);
+			other.transform.parent.GetComponent<PlayerController>().MyWeapon.PickupNew(MyWeaponType, AmmunitionType, SecondaryEffect);
 
 			networkView.RPC("RPCDestroyWeapon", RPCMode.AllBuffered);
 		}

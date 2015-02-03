@@ -41,7 +41,7 @@ public class PlayerController : MonoBehaviour
 
 	public float CurrentRecollorDuration = 0f;
 	
-	private int Health;
+	public int Health;
 
 	public bool Dead = false;
 
@@ -111,19 +111,26 @@ public class PlayerController : MonoBehaviour
 
 	}
 
-	public void PickupWeapon(int WeaponType, int AmmunitionType, int SecondaryEffect)
+	public void GetHit(int Damage, int SourceID, int WeaponType, int AmmunitionType, bool KilledByDirectHit)
 	{
-		MyWeapon.PickupNew (WeaponType, AmmunitionType, SecondaryEffect);
+		if(!Dead)
+			networkView.RPC ("RPCGetHit", RPCMode.AllBuffered, Damage, SourceID, WeaponType, AmmunitionType, KilledByDirectHit);
 	}
-
+	
+	public void GetHit(int Damage, int SourceID, int AmmunitionType)
+	{
+		if(!Dead)
+			networkView.RPC ("RPCGetHit", RPCMode.AllBuffered, Damage, SourceID, 0, AmmunitionType, false);
+	}
+	
 	public void GetHit(int Damage)
 	{
 		if(!Dead)
-			networkView.RPC ("RPCGetHit", RPCMode.AllBuffered, Damage);
+			networkView.RPC ("RPCGetHit", RPCMode.AllBuffered, Damage, GameController.GetUserEntry(networkView.owner).ID, 0, 0, false);
 	}
 
 	[RPC]
-	public void RPCGetHit(int Damage)
+	public void RPCGetHit(int Damage, int SourceID, int WeaponType, int AmmunitionType, bool KilledByDirectHit)
 	{
 		_gotHit = true;
 		Health = Mathf.Clamp (Health - Damage, 0, Properties.MaxPlayerHealth);
@@ -132,20 +139,36 @@ public class PlayerController : MonoBehaviour
 		if (!networkView.isMine)
 						return;
 
-		if (Health == 0) Die ();
+		if (Health == 0) Die (SourceID, WeaponType, AmmunitionType, KilledByDirectHit);
 
 		HUDController.Singleton.HealthCounter.text = Health.ToString ();
 	}
 
-	public void Die()
+	public void Die(int KillerID, int WeaponType, int AmmunitionType, bool KilledByDirectHit)
 	{
+		if(!Dead)
+			networkView.RPC ("RPCDie", 
+			                 RPCMode.AllBuffered, 
+			                 KillerID, 
+			                 GameController.GetUserEntry(networkView.owner).ID, 
+			                 WeaponType, 
+			                 AmmunitionType, 
+			                 KilledByDirectHit);
 		Dead = true;
-		networkView.RPC ("RPCDie", RPCMode.AllBuffered);
 	}
 
 	[RPC]
-	public void RPCDie()
+	public void RPCDie(int KillerID, int VictimID, int WeaponType, int AmmunitionType, bool KilledByDirectHit)
 	{
+		if(networkView.isMine)
+			HUDController.Singleton.MyActionBar.CreateEntry (KillerID, VictimID, WeaponType, AmmunitionType, KilledByDirectHit);
+		
+		GameController.UserEntry _killer = GameController.GetUserEntry (KillerID);
+		GameController.UserEntry _victim = GameController.GetUserEntry (VictimID);
+
+		_killer.UpdateStatistics (_killer.Kills + 1, _killer.Deaths);
+		_victim.UpdateStatistics (_victim.Kills, _victim.Deaths + 1);
+
 		foreach (Collider col in gameObject.GetComponentsInChildren<Collider>())
 			col.enabled = false;
 		StartCoroutine ("CDeath");

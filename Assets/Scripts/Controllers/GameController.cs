@@ -6,6 +6,10 @@ public class GameController : MonoBehaviour
 {
 	public static GameController Singleton;
 
+	public delegate void UserEvent();
+	public UserEvent OnNewUserEvent;
+	public UserEvent OnRemoveUserEvent;
+
 	[HideInInspector]
 	public List<Transform> SpawnPositions = new List<Transform> ();
 	[HideInInspector]
@@ -22,6 +26,8 @@ public class GameController : MonoBehaviour
 	public List<GameObject> WeaponSpawnPlatforms = new List<GameObject>();
 	[HideInInspector]
 	public GameObject CurMap;
+
+	public List<UserEntry> Users = new List<UserEntry> (); //All currently registered users. Contains info like user name.
 
 	public string SelectedMap = "MapSmallArena";
 	public int MaxNumberAllowedClients = 3; // this is here and not in properties because every map could have a different amount
@@ -72,18 +78,24 @@ public class GameController : MonoBehaviour
 			Network.Instantiate (Resources.Load(SelectedMap), Vector3.zero, Quaternion.identity, 1);
 	}
 
-	public void ArenaSpawned() // called upon arena initialized and spawnpoints added, now spawnprocess can begin
+	public void StartGameCountDown()
 	{
+		MyHUD.MyCountdown.CountdownOverEvent += GameCommence;
+		Countdown.EveryoneCountDownFrom (Properties.GameStartTimer);
+	}
+
+	public void GameCommence() // called upon arena initialized, spawnpoints added, and countdown over, now spawnprocess can begin
+	{
+		MyHUD.MyCountdown.CountdownOverEvent -= GameCommence;
 		networkView.RPC ("RPCSpawnOrder", RPCMode.AllBuffered, Network.connections);
 	}
 
 	[RPC]
 	public void RPCStartGame()
 	{
+		Screen.showCursor = false;
 		CurGameState = Properties.GameState.InGame;
 		MyHUD.GameCommence ();
-		if(Network.isServer)
-			WeaponSpawnPlatform.SetWeaponPlatforms (true);
 	}
 
 	public IEnumerator CPlayerSpawnSequence(NetworkPlayer[] order)
@@ -171,6 +183,8 @@ public class GameController : MonoBehaviour
 			MasterServer.UnregisterHost();
 		if(HasNetworkConnection)
 			Network.Disconnect ();
+
+		CleanResetGame ();
 	}
 
     public void RequestHosts()
@@ -183,13 +197,7 @@ public class GameController : MonoBehaviour
 	
 	public IEnumerator CCountdownTimeout()
 	{
-		float _curTime = Properties.RequestHostTimeoutLength;
-
-		while (_curTime > 0f) 
-		{
-			yield return new WaitForEndOfFrame();
-			_curTime -= Time.deltaTime;
-		}
+		yield return new WaitForSeconds(Properties.RequestHostTimeoutLength);
 
 		if (!HasNetworkConnection) 
 		{
@@ -213,11 +221,12 @@ public class GameController : MonoBehaviour
 	{
 		CurGameState = Properties.GameState.Lobby;
 		MyHUD.SwitchToLobby ();
+		RegisterUser.Register (new RegisterUser.RequiredInformation(MyHUD.CurrentNickname));
 	}
 	
 	void OnServerInitialized()
 	{
-		//
+		RegisterUser.Register (new RegisterUser.RequiredInformation(MyHUD.CurrentNickname));
 	}
 
 	void OnPlayerConnected(NetworkPlayer player)
@@ -227,20 +236,8 @@ public class GameController : MonoBehaviour
 
 	void OnPlayerDisconnected(NetworkPlayer origin) // is called ONLY ON THE SERVER! SAFE TO USE!
 	{
-		switch (CurGameState) 
-		{
-
-		case Properties.GameState.Lobby:
-				if (Network.connections.Length == 1)
-					MyHUD.UpdateLobbyText (1);
-				else
-					MyHUD.PollConnectionsInfo ();
-			break;
-
-		case Properties.GameState.InGame:
-				Network.DestroyPlayerObjects(origin);
-			break;
-		}
+		Network.RemoveRPCs (origin);
+		Network.DestroyPlayerObjects(origin);
 	}
 
 	void OnDisconnectedFromServer(NetworkDisconnection info) 
@@ -260,9 +257,9 @@ public class GameController : MonoBehaviour
 
 	public void CleanResetGame()
 	{
+		Screen.showCursor = true;
 		MyHUD.SwitchToMainMenu ();
 		CurGameState = Properties.GameState.Menu;
-		WeaponSpawnPlatform.SetWeaponPlatforms (false);
 		
 		foreach(GameObject Player in Players) 
 			Destroy(Player);
@@ -275,6 +272,12 @@ public class GameController : MonoBehaviour
 		if (CurMap != null)
 			Destroy (CurMap);
 		SpawnPositions.Clear ();
+		WeaponSpawnPlatforms.Clear ();
+
+		foreach (UserEntry user in Users)
+				Destroy (user.MyRegisterObject.gameObject);
+
+		Users.Clear ();
 	}
 
 	public void Respawn(float RespawnTime)
@@ -284,14 +287,8 @@ public class GameController : MonoBehaviour
 	
 	public IEnumerator CRespawn(float RespawnTime)
 	{
-		float _curRespawnTimer = RespawnTime;
-		
-		while (_curRespawnTimer > 0f) 
-		{
-			yield return new WaitForEndOfFrame();
-			//RESPAWN TIMER FOR UI HERE!
-			_curRespawnTimer -= Time.deltaTime;
-		}
+		Countdown.CountDownFrom (RespawnTime);
+		yield return new WaitForSeconds(RespawnTime);
 
 		if (DestroyCamera) 
 		{
@@ -306,6 +303,73 @@ public class GameController : MonoBehaviour
 	public static float GetDistance(Vector3 source, Vector3 target)
 	{
 		return Mathf.Abs ((target - source).magnitude);
+	}
+
+	public static UserEntry AddUserEntry(NetworkPlayer User, string UserName)
+	{
+		UserEntry _newUser = new UserEntry (User, UserName);
+
+		GameController.Singleton.Users.Add (_newUser);
+
+		if (GameController.Singleton.OnNewUserEvent != null)
+			GameController.Singleton.OnNewUserEvent ();
+
+		return _newUser;
+	}
+
+	public static void RemoveUserEntry(int ID)
+	{
+		while (GetUserEntry(ID) != null)
+			GameController.Singleton.Users.Remove (GetUserEntry (ID));
+
+		if (GameController.Singleton.OnRemoveUserEvent != null)
+			GameController.Singleton.OnRemoveUserEvent ();
+	}
+
+	public static UserEntry GetUserEntry(int ID)
+	{
+		foreach (UserEntry user in GameController.Singleton.Users)
+			if (user.ID == ID)
+				return user;
+		
+		return null;
+	}
+
+	public static UserEntry GetUserEntry(NetworkPlayer User)
+	{
+		foreach (UserEntry user in GameController.Singleton.Users)
+				if (user.User == User)
+					return user;
+
+		return null;
+	}
+
+	[System.Serializable]
+	public class UserEntry
+	{
+		public delegate void Updated(int Kills, int Deaths);
+		public Updated OnStatisticsUpdated;
+
+		public NetworkPlayer User;
+		public string UserName = "";
+		public int ID;
+		public RegisterUser MyRegisterObject;
+		public int Kills = 0;
+		public int Deaths = 0;
+
+		public UserEntry(NetworkPlayer User, string UserName)
+		{
+			this.User = User;
+			this.UserName = UserName;
+		}
+
+		public void UpdateStatistics(int Kills, int Deaths)
+		{
+			this.Kills = Kills;
+			this.Deaths = Deaths;
+			if (OnStatisticsUpdated != null)
+				OnStatisticsUpdated (Kills, Deaths);
+		}
 	}
 }
 

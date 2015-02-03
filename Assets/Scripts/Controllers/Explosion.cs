@@ -8,7 +8,8 @@ public class Explosion : MonoBehaviour
 	public float Damage;
 	public float LifeTime;
 	public float CurLifeTime;
-
+	
+	public Properties.AmmunitionTypeEnum AmmunitionType;
 	public Properties.SecondaryEffectEnum SecondaryEffect;
 
 	private MeshRenderer _renderer;
@@ -59,6 +60,7 @@ public class Explosion : MonoBehaviour
 		this.ScalingSpeed = ScalingSpeed;
 		this.SecondaryEffect = (Properties.SecondaryEffectEnum)SecondaryEffect;
 		this.CurLifeTime = LifeTime;
+		AmmunitionType = Properties.AmmunitionTypeEnum.Explosive;
 		_initialized = true;
 	}
 	
@@ -72,7 +74,7 @@ public class Explosion : MonoBehaviour
 			if(_hitPlayer.networkView.isMine && SecondaryEffect == Properties.SecondaryEffectEnum.Healing)
 				_hitPlayer.GetHit(Mathf.RoundToInt((-1) * Damage));
 			else
-				_hitPlayer.GetHit(Mathf.RoundToInt(Damage));
+				_hitPlayer.GetHit(Mathf.RoundToInt(Damage), GameController.GetUserEntry(networkView.owner).ID, (int)AmmunitionType);
 		}
 	}
 }

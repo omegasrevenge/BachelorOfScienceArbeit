@@ -21,6 +21,6 @@ public class ArenaController : MonoBehaviour
 			_myCtrl.SpawnPositions.Add (spawnPoint.transform);
 
 		if(Network.isServer)
-			_myCtrl.ArenaSpawned ();
+			_myCtrl.StartGameCountDown ();
 	}
 }

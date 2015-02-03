@@ -5,7 +5,6 @@ using System.Linq;
 
 public class Weapon : MonoBehaviour 
 {
-
 	public Properties.WeaponTypeEnum WeaponType;
 	public Properties.AmmunitionTypeEnum AmmunitionType;
 	public Properties.SecondaryEffectEnum SecondaryEffect;
@@ -109,8 +108,12 @@ public class Weapon : MonoBehaviour
 		foreach (MeshRenderer rend in WeaponModel.GetComponentsInChildren<MeshRenderer>())
 			rend.material.color = Properties.Singleton.WeaponColors[SecondaryEffect];
 		CurAmmunition = Properties.Singleton.WeaponAmmunitionAmount [WeaponType];
-		if(networkView.isMine)
+		if (networkView.isMine) 
+		{
 			HUDController.Singleton.AmmunitionCounter.text = CurAmmunition.ToString();
+			HUDController.Singleton.MyWeaponBar.ShowWeapon(this);
+		}
+
 	}
 
 	public void Shoot()

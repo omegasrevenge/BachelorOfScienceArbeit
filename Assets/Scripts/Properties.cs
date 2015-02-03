@@ -5,8 +5,6 @@ public class Properties : MonoBehaviour
 {
 	public static Properties Singleton;
 
-	public bool UpdateNow = false;
-
 	void Start()
 	{
 		Singleton = this;
@@ -40,6 +38,7 @@ public class Properties : MonoBehaviour
 	public enum AmmunitionTypeEnum{Generic, Bouncy, Shrapnel, Explosive, Length}
 	public enum SecondaryEffectEnum{None, Healing, Heavy, Delay, Length}
 	public const string BulletModelFolder = "BulletModels";
+	public const float BulletAbleToHitDelay = 0.1f;
 	public readonly string[] BulletModelNames = new string[]{"DefaultBulletModel", "RifleBulletModel", "MachinegunBulletModel", "ShotgunBulletModel", "SniperBulletModel", "BazookaBulletModel"};
 	public readonly int[] BulletDamage = new int[]{10, 25, 10, 12, 35, 50};
 	public readonly float[] WeaponAttackSpeedValues = new float[]{0f, 0f, 0.1f, 1f, 1f, 3f};
@@ -121,7 +120,7 @@ public class Properties : MonoBehaviour
 
 	// WEAPON SPAWN PLATFORM //
 	public const float WeaponSpawnTime = 10f;
-	public float RotationSpeed = 100f;
+	public const float PlatformWeaponRotationSpeed = 100f;
 	///////////////////////////
 
 	// GAME CONTROLLER //
@@ -134,8 +133,18 @@ public class Properties : MonoBehaviour
 	/////////////////////
 
 	// UI //
-	public const float CrosshairLerpSpeed = 5f;
+	public const float CrosshairLerpSpeed = 0.2f;
 	public readonly Vector2 UIDimensions = new Vector2 (640f, 480f);
+	public const string DefaultNickname = "User123";
+	public readonly Vector2 ActionBarLineSpawnPos = new Vector2 (10f, 70f);
+	public const int ActionBarSpacing = 20;
+	public const string ActionBarSeparator = " > ";
+	public const float ActionBarEntryLifeTime = 10f;
+	public const string CurrentWeaponSeparator = ", ";
+	public readonly string[] WeaponNames = new string[]{"Gun", "Rifle", "Machinegun", "Shotgun", "Sniper", "Grenade Launcher"};
+	public readonly string[] AmmunitionNames = new string[]{"Default", "Bouncy", "Shrapnel", "Explosive"};
+	public readonly string[] SecondaryEffectNames = new string[]{"Generic", "Healing", "Heavy Bullets", "Delayed Shots"};
+	public const float StatisticsEntrySpawnDistance = 30f;
 	////////
 
 	public class AllowedWeaponEffectCombinations

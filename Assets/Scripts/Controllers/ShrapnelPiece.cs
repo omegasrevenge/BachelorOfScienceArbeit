@@ -32,7 +32,7 @@ public class ShrapnelPiece : MonoBehaviour
 			if(_hitPlayer.networkView.isMine && SecondaryEffect == Properties.SecondaryEffectEnum.Healing)
 				_hitPlayer.GetHit(Mathf.RoundToInt((-1) * Damage));
 			else
-				_hitPlayer.GetHit(Mathf.RoundToInt(Damage));
+				_hitPlayer.GetHit(Mathf.RoundToInt(Damage), GameController.GetUserEntry(networkView.owner).ID, (int)AmmunitionType);
 		}
 
 		networkView.RPC ("RPCDestroyShrapnelPiece", RPCMode.AllBuffered);
