@@ -18,6 +18,51 @@ public class Properties : MonoBehaviour
 	public const float RecollorDurationAfterHit = 0.1f;
 	////////////
 
+	// SOUND MANAGER //
+	public const string SoundsFolderName = "Sounds";
+	
+	public enum SoundsEnum
+	{
+		Gun,
+		Rifle,
+		Machinegun,
+		Shotgun,
+		Sniper,
+		Bazooka,
+		Shrapnel,
+		Explosion,
+		Bouncy
+	}
+
+	public readonly string[] SoundFileNames = new string[]
+	{
+		"Gun_Sound",
+		"Rifle_Sound",
+		"Machinegun_Sound",
+		"Shotgun_Sound",
+		"Sniper_Sound",
+		"Bazooka_Sound",
+		"Shrapnel_Sound",
+		"Explosion_Sound",
+		"Bouncy_Sound"
+	};
+
+	public readonly float[] SoundDefaultVolumes = new float[]
+	{
+		0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 1f
+	};
+	
+	public readonly float[] SoundDefaultMinDistances = new float[]
+	{
+		80f, 80f, 80f, 80f, 80f, 150f, 80f, 80f, 80f
+	};
+	
+	public readonly float[] SoundDefaultMaxDistances = new float[]
+	{
+		400f, 400f, 400f, 400f, 400f, 900f, 250f, 400f, 200f
+	};
+	///////////////////
+
 	// WEAPON //
 	public const string WeaponModelFolder = "WeaponModels";
 	public enum WeaponTypeEnum{Default, Rifle, MachineGun, Shotgun, Sniper, Bazooka, Length}

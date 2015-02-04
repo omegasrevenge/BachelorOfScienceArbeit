@@ -62,6 +62,14 @@ public class Explosion : MonoBehaviour
 		this.CurLifeTime = LifeTime;
 		AmmunitionType = Properties.AmmunitionTypeEnum.Explosive;
 		_initialized = true;
+
+		SoundManager.PlayClipAt (
+			SoundManager.GetClip ((int)Properties.SoundsEnum.Explosion), 
+			transform.position, 
+			Properties.Singleton.SoundDefaultVolumes [(int)Properties.SoundsEnum.Explosion],
+			Properties.Singleton.SoundDefaultMinDistances [(int)Properties.SoundsEnum.Explosion] * EndScale.magnitude / 110f,
+			Properties.Singleton.SoundDefaultMaxDistances [(int)Properties.SoundsEnum.Explosion] * EndScale.magnitude / 110f
+			);
 	}
 	
 	void OnTriggerEnter(Collider Info)

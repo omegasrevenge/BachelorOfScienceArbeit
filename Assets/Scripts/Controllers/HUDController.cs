@@ -122,6 +122,8 @@ public class HUDController : MonoBehaviour
 	[RPC]
 	public void RPCCountDownFrom(float TargetTime)
 	{
+		if (GameController.Singleton.CurGameState == Properties.GameState.Lobby)
+			Lobby.SetActive (false);
 		Countdown.CountDownFrom (TargetTime);
 	}
 

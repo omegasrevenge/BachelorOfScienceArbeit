@@ -36,5 +36,12 @@ public class Shrapnel : MonoBehaviour
 		foreach (ShrapnelPiece piece in _pieces)
 			piece.Initialize(WeaponType, AmmunitionType, SecondaryEffect);
 		transform.localScale *= ScaleModifier;
+		SoundManager.PlayClipAt (
+			SoundManager.GetClip ((int)Properties.SoundsEnum.Shrapnel), 
+			transform.position, 
+			Properties.Singleton.SoundDefaultVolumes [(int)Properties.SoundsEnum.Shrapnel],
+			Properties.Singleton.SoundDefaultMinDistances [(int)Properties.SoundsEnum.Shrapnel] * ScaleModifier,
+			Properties.Singleton.SoundDefaultMaxDistances [(int)Properties.SoundsEnum.Shrapnel] * ScaleModifier
+			);
 	}
 }

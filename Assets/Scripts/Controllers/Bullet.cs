@@ -90,6 +90,15 @@ public class Bullet : MonoBehaviour
 
 	public void Hit(Collider other)
 	{
+		if(AmmunitionType == Properties.AmmunitionTypeEnum.Bouncy && CurrentBounceCount + 1 < MaxBounceCount)
+			SoundManager.PlayClipAt (
+				SoundManager.GetClip ((int)Properties.SoundsEnum.Bouncy), 
+				transform.position, 
+				Properties.Singleton.SoundDefaultVolumes [(int)Properties.SoundsEnum.Bouncy],
+				Properties.Singleton.SoundDefaultMinDistances [(int)Properties.SoundsEnum.Bouncy],
+				Properties.Singleton.SoundDefaultMaxDistances [(int)Properties.SoundsEnum.Bouncy]
+				);
+
 		if (other.gameObject.layer == Properties.AvatarLayer 
 		    && other.transform.parent.GetComponent<PlayerController> ().networkView.isMine
 		    && LifeTime > (MaxLifeTime - Properties.BulletAbleToHitDelay))

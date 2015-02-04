@@ -26,6 +26,11 @@ public class Weapon : MonoBehaviour
 	private Properties MyProperties;
 	private bool _shootOnlyOnPress = true;
 
+	private int _shotsQueued = 0;
+
+	private bool _coneFired = false;
+	private int _coneBulletsFired = 0;
+
 	void Start()
 	{
 		GameController.Singleton.Weapons.Add (gameObject);
@@ -36,8 +41,10 @@ public class Weapon : MonoBehaviour
 
 	void Update()
 	{
-		if (CurAmmunition <= 0 && WeaponType != Properties.WeaponTypeEnum.Default)
-				PickupDefault ();
+		if (CurAmmunition <= 0 && WeaponType != Properties.WeaponTypeEnum.Default && _shotsQueued == 0) 
+			PickupDefault ();
+
+		if (CurAmmunition <= 0 && _shotsQueued > 0) return;
 
 		_timerSinceLastAttack += Time.deltaTime;
 
@@ -166,12 +173,28 @@ public class Weapon : MonoBehaviour
 
 		CurrentAccuracyDecay += Properties.Singleton.AccuracyDecay [(int)WeaponType];
 		CurrentAccuracyDecay = Mathf.Clamp (CurrentAccuracyDecay, 0f, Properties.AccuracyMaxDecay);
+
+		networkView.RPC ("PlayWeaponSound", RPCMode.AllBuffered);
 	}
 
 	public IEnumerator CDelayShot()
 	{
+		_shotsQueued++;
 		yield return new WaitForSeconds (Properties.Singleton.DelayEffectDuration [(int)WeaponType]);
+		_shotsQueued--;
 		Shoot ();
+	}
+
+	[RPC]
+	public void PlayWeaponSound()
+	{
+		SoundManager.PlayClipAt (
+			SoundManager.GetClip ((int)WeaponType), 
+			transform.position, 
+			Properties.Singleton.SoundDefaultVolumes [(int)WeaponType],
+			Properties.Singleton.SoundDefaultMinDistances [(int)WeaponType],
+			Properties.Singleton.SoundDefaultMaxDistances [(int)WeaponType]
+			);
 	}
 
 	public void OnDestroy()
