@@ -20,6 +20,7 @@ public class Properties : MonoBehaviour
 
 	// SOUND MANAGER //
 	public const string SoundsFolderName = "Sounds";
+	public const float FrequencyPlayerHitSoundsAllowed = 1f; //How often can PlayerHit be played. 1f = once per second max.
 	
 	public enum SoundsEnum
 	{
@@ -31,7 +32,9 @@ public class Properties : MonoBehaviour
 		Bazooka,
 		Shrapnel,
 		Explosion,
-		Bouncy
+		Bouncy,
+		Button,
+		PlayerHit
 	}
 
 	public readonly string[] SoundFileNames = new string[]
@@ -44,22 +47,24 @@ public class Properties : MonoBehaviour
 		"Bazooka_Sound",
 		"Shrapnel_Sound",
 		"Explosion_Sound",
-		"Bouncy_Sound"
+		"Bouncy_Sound",
+		"Button_Sound",
+		"PlayerHit_Sound"
 	};
 
 	public readonly float[] SoundDefaultVolumes = new float[]
 	{
-		0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 1f
+		0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 1f, 1f, 0.5f
 	};
 	
 	public readonly float[] SoundDefaultMinDistances = new float[]
 	{
-		80f, 80f, 80f, 80f, 80f, 150f, 80f, 80f, 80f
+		80f, 80f, 80f, 80f, 80f, 150f, 80f, 80f, 80f, 1000f, 50f
 	};
 	
 	public readonly float[] SoundDefaultMaxDistances = new float[]
 	{
-		400f, 400f, 400f, 400f, 400f, 900f, 250f, 400f, 200f
+		400f, 400f, 400f, 400f, 400f, 900f, 250f, 400f, 200f, 1000f, 150f
 	};
 	///////////////////
 

@@ -22,8 +22,6 @@ public class HUDController : MonoBehaviour
 	public Countdown MyCountdown;
 	public Statistics MyStatistics;
 
-	public bool ListeningToKeyboard = true;
-
 	private List<GameObject> _myScreens;
 
 	[HideInInspector]
@@ -54,8 +52,6 @@ public class HUDController : MonoBehaviour
 
 	void Update()
 	{
-		if (!ListeningToKeyboard) return;
-
 		if (GameController.Singleton.CurGameState == Properties.GameState.InGame) 
 		{
 			if(Input.GetKeyDown(KeyCode.Tab) && !MyStatistics.gameObject.activeSelf)
@@ -105,7 +101,7 @@ public class HUDController : MonoBehaviour
 
 	public void SwitchToMainMenu()
 	{
-		ListeningToKeyboard = true;
+		GetComponent<AudioListener> ().enabled = true;
 		MyCountdown.gameObject.SetActive (false);
 		DeactivateScreens ();
 		MainMenu.SetActive (true);
@@ -119,6 +115,7 @@ public class HUDController : MonoBehaviour
 
 	public void GameCommence()
 	{
+		GetComponent<AudioListener> ().enabled = false;
 		DeactivateScreens ();
 		InGameUI.SetActive (true);
 	}
@@ -138,6 +135,17 @@ public class HUDController : MonoBehaviour
 	public void EveryoneCountdown(float TargetTime)
 	{
 		networkView.RPC ("RPCCountDownFrom", RPCMode.All, TargetTime);
+	}
+
+	public void MouseButtonClick()
+	{
+		SoundManager.PlayClipAt (
+			SoundManager.GetClip ((int) Properties.SoundsEnum.Button), 
+			transform.position, 
+			Properties.Singleton.SoundDefaultVolumes [(int) Properties.SoundsEnum.Button],
+			Properties.Singleton.SoundDefaultMinDistances [(int) Properties.SoundsEnum.Button],
+			Properties.Singleton.SoundDefaultMaxDistances [(int) Properties.SoundsEnum.Button]
+			);
 	}
 
 	[RPC]

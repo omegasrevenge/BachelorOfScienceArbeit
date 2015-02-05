@@ -80,7 +80,8 @@ public class Bullet : MonoBehaviour
 
 	public void OnTriggerEnter(Collider target)
 	{
-		Hit (target);
+		if (target.tag != "WeaponSpawnPlatform")
+			Hit (target);
 	}
 
 	public void OnCollisionEnter(Collision target)

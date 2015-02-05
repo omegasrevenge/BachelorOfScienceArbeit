@@ -14,6 +14,8 @@ public class PlayerController : MonoBehaviour
 	[HideInInspector]
 	public MeshRenderer[] PlayerRenderer;
 
+	public bool PlayingHitSound = false;
+
 	public Weapon MyWeapon
 	{
 		get
@@ -136,12 +138,32 @@ public class PlayerController : MonoBehaviour
 		Health = Mathf.Clamp (Health - Damage, 0, Properties.MaxPlayerHealth);
 		_myHitColor = Damage < 0f ? Color.green : Color.red;
 
+		if (!PlayingHitSound)
+						StartCoroutine ("CPlayHitSound");
+
 		if (!networkView.isMine)
 						return;
 
 		if (Health == 0) Die (SourceID, WeaponType, AmmunitionType, KilledByDirectHit);
 
 		HUDController.Singleton.HealthCounter.text = Health.ToString ();
+	}
+
+	public IEnumerator CPlayHitSound()
+	{
+		PlayingHitSound = true;
+
+		SoundManager.PlayClipAt (
+			SoundManager.GetClip ((int) Properties.SoundsEnum.PlayerHit), 
+			transform.position, 
+			Properties.Singleton.SoundDefaultVolumes [(int) Properties.SoundsEnum.PlayerHit],
+			Properties.Singleton.SoundDefaultMinDistances [(int) Properties.SoundsEnum.PlayerHit],
+			Properties.Singleton.SoundDefaultMaxDistances [(int) Properties.SoundsEnum.PlayerHit]
+			);
+
+		yield return new WaitForSeconds (Properties.FrequencyPlayerHitSoundsAllowed);
+
+		PlayingHitSound = false;
 	}
 
 	public void Die(int KillerID, int WeaponType, int AmmunitionType, bool KilledByDirectHit)
