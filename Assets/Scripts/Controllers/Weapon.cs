@@ -41,6 +41,8 @@ public class Weapon : MonoBehaviour
 
 	void Update()
 	{
+		if (GameController.Singleton.CurGameState == Properties.GameState.GameOver) return;
+
 		if (CurAmmunition <= 0 && WeaponType != Properties.WeaponTypeEnum.Default && _shotsQueued == 0) 
 			PickupDefault ();
 

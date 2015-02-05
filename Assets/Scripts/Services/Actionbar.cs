@@ -43,7 +43,18 @@ public class Actionbar : MonoBehaviour
 	public IEnumerator CDeleteActionBarEntry(GameObject Entry)
 	{
 		yield return new WaitForSeconds(Properties.ActionBarEntryLifeTime);
-		ActionBarEntries.Remove (Entry.GetComponent<Text> ());
-		Destroy (Entry);
+
+		if(Entry != null)
+		{
+			ActionBarEntries.Remove (Entry.GetComponent<Text> ());
+			Destroy (Entry);
+		}
+	}
+
+	void OnDisable()
+	{
+		foreach (Text entry in ActionBarEntries)
+						Destroy (entry.gameObject);
+		ActionBarEntries.Clear ();
 	}
 }

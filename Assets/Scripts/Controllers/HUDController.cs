@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class HUDController : MonoBehaviour 
 {
@@ -10,6 +11,7 @@ public class HUDController : MonoBehaviour
 	public GameObject Lobby;
 	public GameObject WaitingForServer;
 	public GameObject InGameUI;
+	public GameObject StartingScreen;
 
 	public Crosshair MyCrosshair;
 	public Text AmmunitionCounter;
@@ -20,6 +22,10 @@ public class HUDController : MonoBehaviour
 	public Countdown MyCountdown;
 	public Statistics MyStatistics;
 
+	public bool ListeningToKeyboard = true;
+
+	private List<GameObject> _myScreens;
+
 	[HideInInspector]
 	public string CurrentNickname = Properties.DefaultNickname;
 
@@ -28,6 +34,7 @@ public class HUDController : MonoBehaviour
 
 	void Start () 
 	{
+		_myScreens = new List<GameObject> (){MainMenu, Lobby, WaitingForServer, InGameUI, StartingScreen, MyStatistics.gameObject};
 		Singleton = this;
 		_myLobbyText = Lobby.transform.FindChild ("Connections").GetComponent<Text> ();
 		_lobbyText = _myLobbyText.text;
@@ -47,6 +54,8 @@ public class HUDController : MonoBehaviour
 
 	void Update()
 	{
+		if (!ListeningToKeyboard) return;
+
 		if (GameController.Singleton.CurGameState == Properties.GameState.InGame) 
 		{
 			if(Input.GetKeyDown(KeyCode.Tab) && !MyStatistics.gameObject.activeSelf)
@@ -61,6 +70,12 @@ public class HUDController : MonoBehaviour
 		}
 	}
 
+	public void DeactivateScreens()
+	{
+		foreach (GameObject screen in _myScreens)
+				screen.SetActive (false);
+	}
+
 	public void SaveNickname()
 	{
 		CurrentNickname = NicknameInput.text;
@@ -68,16 +83,14 @@ public class HUDController : MonoBehaviour
 
 	public void GameStart()
 	{
-		MainMenu.SetActive (false);
+		DeactivateScreens ();
 		Lobby.SetActive (true);
-		InGameUI.SetActive (false);
 		GameController.Singleton.CreateGame ();
 	}
 
 	public void GameJoin()
 	{
-		MainMenu.SetActive (false);
-		InGameUI.SetActive (false);
+		DeactivateScreens ();
 		WaitingForServer.SetActive (true);
 		GameController.Singleton.RequestHosts ();
 	}
@@ -85,28 +98,36 @@ public class HUDController : MonoBehaviour
 	public void SwitchToLobby()
 	{
 		_myLobbyText.text = _lobbyText; //if you are client, then leave and open your own game, this does not get otherwise reset
-		WaitingForServer.SetActive (false);
-		MyCountdown.gameObject.SetActive (false);
-		InGameUI.SetActive (false);
+		DeactivateScreens ();
 		Lobby.SetActive (true);
 		Lobby.transform.FindChild ("StartGame").gameObject.SetActive (Network.isServer);
 	}
 
 	public void SwitchToMainMenu()
 	{
+		ListeningToKeyboard = true;
 		MyCountdown.gameObject.SetActive (false);
-		InGameUI.SetActive (false);
-		WaitingForServer.SetActive (false);
-		Lobby.SetActive (false);
+		DeactivateScreens ();
 		MainMenu.SetActive (true);
+	}
+
+	public void SwitchToStartingScreen()
+	{
+		DeactivateScreens ();
+		StartingScreen.SetActive (true);
 	}
 
 	public void GameCommence()
 	{
-		MainMenu.SetActive (false);
-		Lobby.SetActive (false);
-		WaitingForServer.SetActive (false);
+		DeactivateScreens ();
 		InGameUI.SetActive (true);
+	}
+	
+	[RPC]
+	public void RPCSwitchToStartingScreen()
+	{
+		SwitchToStartingScreen ();
+		Countdown.CountDownFrom (Properties.GameStartTimer);
 	}
 
 	public void CloseGame()
@@ -127,7 +148,7 @@ public class HUDController : MonoBehaviour
 		Countdown.CountDownFrom (TargetTime);
 	}
 
-	public void UpdateLobbyText()
+	public void UpdateLobbyText(GameController.UserEntry User)
 	{
 		_myLobbyText.text = _lobbyText.Replace ("1", GameController.Singleton.Users.Count.ToString ());
 	}

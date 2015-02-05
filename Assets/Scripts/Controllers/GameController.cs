@@ -6,7 +6,7 @@ public class GameController : MonoBehaviour
 {
 	public static GameController Singleton;
 
-	public delegate void UserEvent();
+	public delegate void UserEvent (UserEntry User);
 	public UserEvent OnNewUserEvent;
 	public UserEvent OnRemoveUserEvent;
 
@@ -55,6 +55,22 @@ public class GameController : MonoBehaviour
 	{
 		Singleton = this;
 		Application.runInBackground = true;
+		Application.targetFrameRate = 60;
+		OnNewUserEvent += RegisterNewUserFunction;
+	}
+	
+	public void RegisterNewUserFunction(UserEntry User)
+	{
+		User.OnStatisticsUpdated += CheckForVictory;
+	}
+	
+	public void CheckForVictory(UserEntry User)
+	{
+		if (User.Kills < Properties.KillsToWin) return;
+
+		CurGameState = Properties.GameState.GameOver;
+		MyHUD.MyStatistics.DisplayWinScreen (User.UserName);
+		MyPlayer.GetComponent<PlayerController> ().MyCamera.GetComponent<MouseLook> ().enabled = false;
 	}
 
 	void Update()
@@ -81,7 +97,7 @@ public class GameController : MonoBehaviour
 	public void StartGameCountDown()
 	{
 		MyHUD.MyCountdown.CountdownOverEvent += GameCommence;
-		Countdown.EveryoneCountDownFrom (Properties.GameStartTimer);
+		MyHUD.networkView.RPC ("RPCSwitchToStartingScreen", RPCMode.AllBuffered);
 	}
 
 	public void GameCommence() // called upon arena initialized, spawnpoints added, and countdown over, now spawnprocess can begin
@@ -278,10 +294,16 @@ public class GameController : MonoBehaviour
 				Destroy (user.MyRegisterObject.gameObject);
 
 		Users.Clear ();
+
+		GameObject _cam = GameObject.FindGameObjectWithTag ("MainCamera");
+		if(_cam != null)
+			Destroy (_cam);
 	}
 
 	public void Respawn(float RespawnTime)
 	{
+		if (CurGameState == Properties.GameState.GameOver) return;
+
 		StartCoroutine ("CRespawn", RespawnTime);
 	}
 	
@@ -289,15 +311,18 @@ public class GameController : MonoBehaviour
 	{
 		Countdown.CountDownFrom (RespawnTime);
 		yield return new WaitForSeconds(RespawnTime);
-
-		if (DestroyCamera) 
+		
+		if(CurGameState != Properties.GameState.GameOver)
 		{
-			Camera[] _myCams = GameObject.FindObjectsOfType<Camera> ();
-			foreach(Camera cam in _myCams)
-				Destroy(cam.gameObject);
+			if (DestroyCamera) 
+			{
+				Camera[] _myCams = GameObject.FindObjectsOfType<Camera> ();
+				foreach(Camera cam in _myCams)
+					Destroy(cam.gameObject);
+			}
+			
+			SpawnPlayer ();
 		}
-
-		SpawnPlayer ();
 	}
 
 	public static float GetDistance(Vector3 source, Vector3 target)
@@ -312,18 +337,19 @@ public class GameController : MonoBehaviour
 		GameController.Singleton.Users.Add (_newUser);
 
 		if (GameController.Singleton.OnNewUserEvent != null)
-			GameController.Singleton.OnNewUserEvent ();
+			GameController.Singleton.OnNewUserEvent (_newUser);
 
 		return _newUser;
 	}
 
 	public static void RemoveUserEntry(int ID)
 	{
-		while (GetUserEntry(ID) != null)
-			GameController.Singleton.Users.Remove (GetUserEntry (ID));
+		UserEntry _myUserEntry = GetUserEntry (ID);
+
+		GameController.Singleton.Users.Remove (_myUserEntry);
 
 		if (GameController.Singleton.OnRemoveUserEvent != null)
-			GameController.Singleton.OnRemoveUserEvent ();
+			GameController.Singleton.OnRemoveUserEvent (_myUserEntry);
 	}
 
 	public static UserEntry GetUserEntry(int ID)
@@ -347,7 +373,7 @@ public class GameController : MonoBehaviour
 	[System.Serializable]
 	public class UserEntry
 	{
-		public delegate void Updated(int Kills, int Deaths);
+		public delegate void Updated(UserEntry User);
 		public Updated OnStatisticsUpdated;
 
 		public NetworkPlayer User;
@@ -368,7 +394,7 @@ public class GameController : MonoBehaviour
 			this.Kills = Kills;
 			this.Deaths = Deaths;
 			if (OnStatisticsUpdated != null)
-				OnStatisticsUpdated (Kills, Deaths);
+				OnStatisticsUpdated (this);
 		}
 	}
 }

@@ -7,7 +7,7 @@ public class AlwaysFollow : MonoBehaviour
 
 	void Update () 
 	{
-		if (Target != null) 
+		if (Target != null && GameController.Singleton.CurGameState != Properties.GameState.GameOver) 
 		{
 			transform.position = Target.position;
 			transform.rotation = Target.rotation;

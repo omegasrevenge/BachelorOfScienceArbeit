@@ -1,11 +1,21 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
 public class Statistics : MonoBehaviour 
 {
 	public GameObject EntryPrefab;
+	public GameObject WinGameMessage;
 	public List<EntryCombination> Entries = new List<EntryCombination>();
+
+	public void DisplayWinScreen(string UserName)
+	{
+		gameObject.SetActive (true);
+		WinGameMessage.SetActive (true);
+		Text _myWinText = WinGameMessage.transform.FindChild ("Text").GetComponent<Text> ();
+		_myWinText.text = _myWinText.text.Replace ("$", UserName);
+	}
 
 	void OnEnable()
 	{
@@ -18,8 +28,7 @@ public class Statistics : MonoBehaviour
 			_statEntry.GetComponent<RectTransform>().SetParent(transform, false);
 			_statEntry.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, -Entries.Count * Properties.StatisticsEntrySpawnDistance);
 			user.OnStatisticsUpdated += _statEntry.UpdateEntry;
-			_statEntry.Name.text = user.UserName;
-			_statEntry.UpdateEntry(user.Kills, user.Deaths);
+			_statEntry.UpdateEntry(user);
 		}
 	}
 
@@ -31,6 +40,7 @@ public class Statistics : MonoBehaviour
 			Destroy (entry.MyStatisticsEntry.gameObject);
 		}
 		Entries.Clear ();
+		WinGameMessage.SetActive (false);
 	}
 
 	public class EntryCombination
