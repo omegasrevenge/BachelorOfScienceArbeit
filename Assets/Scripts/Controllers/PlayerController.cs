@@ -109,7 +109,17 @@ public class PlayerController : MonoBehaviour
 
 		MyWeapon = ((GameObject)Network.Instantiate (Resources.Load ("Weapon"), WeaponAnchor.position, WeaponAnchor.rotation, 1)).GetComponent<Weapon>();
 		MyWeapon.transform.parent = WeaponAnchor;
-		MyWeapon.PickupDefault ();
+
+		if(GameController.GetUserEntry(networkView.owner).Deaths > 0)
+		{
+			int WeaponType = Random.Range(1, ((int)Properties.WeaponTypeEnum.Length));
+			int AmmunitionType = (int)Weapon.ChooseAmmunitionType((Properties.WeaponTypeEnum)WeaponType);
+			int SecondaryEffect = (int)Weapon.ChooseSecondaryEffect((Properties.WeaponTypeEnum)WeaponType, (Properties.AmmunitionTypeEnum)AmmunitionType);
+			
+			MyWeapon.PickupNew(WeaponType, AmmunitionType, SecondaryEffect);
+		}
+		else
+			MyWeapon.PickupDefault ();
 
 	}
 
@@ -176,12 +186,14 @@ public class PlayerController : MonoBehaviour
 			                 WeaponType, 
 			                 AmmunitionType, 
 			                 KilledByDirectHit);
-		Dead = true;
 	}
 
 	[RPC]
 	public void RPCDie(int KillerID, int VictimID, int WeaponType, int AmmunitionType, bool KilledByDirectHit)
 	{
+		if (Dead) return;
+		Dead = true;
+
 		if(networkView.isMine)
 			HUDController.Singleton.MyActionBar.CreateEntry (KillerID, VictimID, WeaponType, AmmunitionType, KilledByDirectHit);
 		
@@ -211,7 +223,21 @@ public class PlayerController : MonoBehaviour
 		foreach (GameObject weapon in MyGameController.Weapons) 
 		{
 			if(weapon.networkView.owner == networkView.owner)
+			{
 				MyWeapon = weapon.GetComponent<Weapon>();
+				break;
+			}
+		}
+		
+		if(MyWeapon == null)
+		{
+			Weapon[] _weapons = GameObject.FindObjectsOfType<Weapon>();
+			foreach(Weapon weapon in _weapons)
+				if(weapon.networkView.owner == networkView.owner)
+					{
+						MyWeapon = weapon.GetComponent<Weapon>();
+						break;
+					}
 		}
 
 		MeshRenderer[] weaponRenderers = MyWeapon.gameObject.GetComponentsInChildren<MeshRenderer> ();
