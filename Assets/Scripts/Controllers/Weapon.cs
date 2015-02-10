@@ -144,6 +144,7 @@ public class Weapon : MonoBehaviour
 		RaycastHit Hit;
 		Vector3 TargetPos = Vector3.zero;
 		int RaycastLayerMask = 1 << Properties.WeaponSpawnPlatformLayer;
+		RaycastLayerMask = ~RaycastLayerMask;
 
 		if (Physics.Raycast (Crosshair, out Hit, Mathf.Infinity, RaycastLayerMask)) 
 		{
