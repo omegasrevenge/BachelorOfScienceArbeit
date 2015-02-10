@@ -140,11 +140,11 @@ public class HUDController : MonoBehaviour
 	public void MouseButtonClick()
 	{
 		SoundManager.PlayClipAt (
-			SoundManager.GetClip ((int) Properties.SoundsEnum.Button), 
+			SoundManager.GetClip ((int) Properties.Sounds.Button), 
 			transform.position, 
-			Properties.Singleton.SoundDefaultVolumes [(int) Properties.SoundsEnum.Button],
-			Properties.Singleton.SoundDefaultMinDistances [(int) Properties.SoundsEnum.Button],
-			Properties.Singleton.SoundDefaultMaxDistances [(int) Properties.SoundsEnum.Button]
+			Properties.Singleton.SoundDefaultVolumes [(int) Properties.Sounds.Button],
+			Properties.Singleton.SoundDefaultMinDistances [(int) Properties.Sounds.Button],
+			Properties.Singleton.SoundDefaultMaxDistances [(int) Properties.Sounds.Button]
 			);
 	}
 

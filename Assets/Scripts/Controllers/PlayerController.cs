@@ -112,9 +112,9 @@ public class PlayerController : MonoBehaviour
 
 		if(GameController.GetUserEntry(networkView.owner).Deaths > 0)
 		{
-			int WeaponType = Random.Range(1, ((int)Properties.WeaponTypeEnum.Length));
-			int AmmunitionType = (int)Weapon.ChooseAmmunitionType((Properties.WeaponTypeEnum)WeaponType);
-			int SecondaryEffect = (int)Weapon.ChooseSecondaryEffect((Properties.WeaponTypeEnum)WeaponType, (Properties.AmmunitionTypeEnum)AmmunitionType);
+			int WeaponType = Random.Range(1, ((int)Properties.WeaponType.Length));
+			int AmmunitionType = (int)Weapon.ChooseAmmunitionType((Properties.WeaponType)WeaponType);
+			int SecondaryEffect = (int)Weapon.ChooseSecondaryEffect((Properties.WeaponType)WeaponType, (Properties.AmmunitionType)AmmunitionType);
 			
 			MyWeapon.PickupNew(WeaponType, AmmunitionType, SecondaryEffect);
 		}
@@ -164,11 +164,11 @@ public class PlayerController : MonoBehaviour
 		PlayingHitSound = true;
 
 		SoundManager.PlayClipAt (
-			SoundManager.GetClip ((int) Properties.SoundsEnum.PlayerHit), 
+			SoundManager.GetClip ((int) Properties.Sounds.PlayerHit), 
 			transform.position, 
-			Properties.Singleton.SoundDefaultVolumes [(int) Properties.SoundsEnum.PlayerHit],
-			Properties.Singleton.SoundDefaultMinDistances [(int) Properties.SoundsEnum.PlayerHit],
-			Properties.Singleton.SoundDefaultMaxDistances [(int) Properties.SoundsEnum.PlayerHit]
+			Properties.Singleton.SoundDefaultVolumes [(int) Properties.Sounds.PlayerHit],
+			Properties.Singleton.SoundDefaultMinDistances [(int) Properties.Sounds.PlayerHit],
+			Properties.Singleton.SoundDefaultMaxDistances [(int) Properties.Sounds.PlayerHit]
 			);
 
 		yield return new WaitForSeconds (Properties.FrequencyPlayerHitSoundsAllowed);

@@ -23,7 +23,7 @@ public class WeaponSpawnPlatform : MonoBehaviour
 			if(Timer >= (GameController.Singleton.WeaponSpawnPlatforms.Count * Properties.WeaponSpawnTime) / GameController.Singleton.Users.Count)
 			{
 				Timer = 0f;
-				int WeaponType = Random.Range(1, ((int)Properties.WeaponTypeEnum.Length));
+				int WeaponType = Random.Range(1, ((int)Properties.WeaponType.Length));
 				networkView.RPC("RPCSummonWeapon", RPCMode.AllBuffered, WeaponType);
 			}
 		}
@@ -61,8 +61,8 @@ public class WeaponSpawnPlatform : MonoBehaviour
 
 		if (other.collider.gameObject.layer == Properties.AvatarLayer && MyWeapon != null) 
 		{
-			int AmmunitionType = (int)Weapon.ChooseAmmunitionType((Properties.WeaponTypeEnum)MyWeaponType);
-			int SecondaryEffect = (int)Weapon.ChooseSecondaryEffect((Properties.WeaponTypeEnum)MyWeaponType, (Properties.AmmunitionTypeEnum)AmmunitionType);
+			int AmmunitionType = (int)Weapon.ChooseAmmunitionType((Properties.WeaponType)MyWeaponType);
+			int SecondaryEffect = (int)Weapon.ChooseSecondaryEffect((Properties.WeaponType)MyWeaponType, (Properties.AmmunitionType)AmmunitionType);
 
 			other.transform.parent.GetComponent<PlayerController>().MyWeapon.PickupNew(MyWeaponType, AmmunitionType, SecondaryEffect);
 

@@ -5,9 +5,9 @@ using System.Linq;
 
 public class Weapon : MonoBehaviour 
 {
-	public Properties.WeaponTypeEnum WeaponType;
-	public Properties.AmmunitionTypeEnum AmmunitionType;
-	public Properties.SecondaryEffectEnum SecondaryEffect;
+	public Properties.WeaponType WeaponType;
+	public Properties.AmmunitionType AmmunitionType;
+	public Properties.SecondaryEffect SecondaryEffect;
 
 	[HideInInspector]
 	public Transform Nozzle;
@@ -43,7 +43,7 @@ public class Weapon : MonoBehaviour
 	{
 		if (GameController.Singleton.CurGameState == Properties.GameState.GameOver) return;
 
-		if (CurAmmunition <= 0 && WeaponType != Properties.WeaponTypeEnum.Default && _shotsQueued == 0) 
+		if (CurAmmunition <= 0 && WeaponType != Properties.WeaponType.Default && _shotsQueued == 0) 
 			PickupDefault ();
 
 		if (CurAmmunition <= 0 && _shotsQueued > 0) return;
@@ -59,7 +59,7 @@ public class Weapon : MonoBehaviour
 			if(Input.GetMouseButtonDown(0))
 			{
 				_timerSinceLastAttack = 0f;
-				if(SecondaryEffect == Properties.SecondaryEffectEnum.Delay)
+				if(SecondaryEffect == Properties.SecondaryEffect.Delay)
 					StartCoroutine("CDelayShot");
 				else
 					Shoot();
@@ -68,7 +68,7 @@ public class Weapon : MonoBehaviour
 		else if (Input.GetMouseButton (0) && _timerSinceLastAttack >= Properties.Singleton.WeaponAttackSpeedValues[(int)WeaponType]) 
 		{
 			_timerSinceLastAttack = 0f;
-			if(SecondaryEffect == Properties.SecondaryEffectEnum.Delay)
+			if(SecondaryEffect == Properties.SecondaryEffect.Delay)
 				StartCoroutine("CDelayShot");
 			else
 				Shoot();
@@ -88,7 +88,7 @@ public class Weapon : MonoBehaviour
 
 	public void PickupDefault()
 	{
-		WeaponType = Properties.WeaponTypeEnum.Default;
+		WeaponType = Properties.WeaponType.Default;
 		AmmunitionType = ChooseAmmunitionType (WeaponType);
 		SecondaryEffect = ChooseSecondaryEffect (WeaponType, AmmunitionType);
 		networkView.RPC ("RPCCreate", RPCMode.AllBuffered, (int)WeaponType, (int)AmmunitionType, (int)SecondaryEffect);
@@ -107,9 +107,9 @@ public class Weapon : MonoBehaviour
 				transform.rotation
 				); 
 
-		this.AmmunitionType = (Properties.AmmunitionTypeEnum)AmmunitionType;
-		this.SecondaryEffect = (Properties.SecondaryEffectEnum)SecondaryEffect;
-		this.WeaponType = (Properties.WeaponTypeEnum)WeaponType;
+		this.AmmunitionType = (Properties.AmmunitionType)AmmunitionType;
+		this.SecondaryEffect = (Properties.SecondaryEffect)SecondaryEffect;
+		this.WeaponType = (Properties.WeaponType)WeaponType;
 
 		WeaponModel.transform.parent = transform;
 		Nozzle = WeaponModel.transform.FindChild ("Nozzle");
@@ -143,8 +143,9 @@ public class Weapon : MonoBehaviour
 
 		RaycastHit Hit;
 		Vector3 TargetPos = Vector3.zero;
+		int RaycastLayerMask = 1 << Properties.WeaponSpawnPlatformLayer;
 
-		if (Physics.Raycast (Crosshair, out Hit)) 
+		if (Physics.Raycast (Crosshair, out Hit, Mathf.Infinity, RaycastLayerMask)) 
 		{
 			TargetPos = Hit.point;
 		}
@@ -204,17 +205,17 @@ public class Weapon : MonoBehaviour
 		GameController.Singleton.Weapons.Remove (gameObject);
 	}
 	
-	public static Properties.AmmunitionTypeEnum ChooseAmmunitionType(Properties.WeaponTypeEnum WeaponType)
+	public static Properties.AmmunitionType ChooseAmmunitionType(Properties.WeaponType WeaponType)
 	{
 		Properties.AllowedWeaponEffectCombinations _allowedCombo = Properties.Singleton.WeaponRestrictions [(int)WeaponType];
 		return _allowedCombo.AmmunitionTypes [Random.Range (0, _allowedCombo.AmmunitionTypes.Length)];
 	}
 	
-	public static Properties.SecondaryEffectEnum ChooseSecondaryEffect(Properties.WeaponTypeEnum WeaponType, Properties.AmmunitionTypeEnum AmmunitionType)
+	public static Properties.SecondaryEffect ChooseSecondaryEffect(Properties.WeaponType WeaponType, Properties.AmmunitionType AmmunitionType)
 	{
 		Properties.AllowedWeaponEffectCombinations _allowedCombo = Properties.Singleton.WeaponRestrictions [(int)WeaponType];
 		Properties.AllowedSecondaryEffects _allowedSecondary = Properties.Singleton.AmmunitionRestrictions [(int)AmmunitionType];
-		Properties.SecondaryEffectEnum _myEffect = Properties.SecondaryEffectEnum.None;
+		Properties.SecondaryEffect _myEffect = Properties.SecondaryEffect.None;
 		
 		do
 		{

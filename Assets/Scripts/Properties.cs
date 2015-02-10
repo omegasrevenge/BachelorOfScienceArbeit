@@ -22,7 +22,7 @@ public class Properties : MonoBehaviour
 	public const string SoundsFolderName = "Sounds";
 	public const float FrequencyPlayerHitSoundsAllowed = 1f; //How often can PlayerHit be played. 1f = once per second max.
 	
-	public enum SoundsEnum
+	public enum Sounds
 	{
 		Gun,
 		Rifle,
@@ -70,7 +70,7 @@ public class Properties : MonoBehaviour
 
 	// WEAPON //
 	public const string WeaponModelFolder = "WeaponModels";
-	public enum WeaponTypeEnum{Default, Rifle, MachineGun, Shotgun, Sniper, Bazooka, Length}
+	public enum WeaponType{Default, Rifle, MachineGun, Shotgun, Sniper, Bazooka, Length}
 	public readonly string[] WeaponModelNames = new string[]{"DefaultWeaponModel", "RifleModel", "MachinegunModel", "ShotgunModel", "SniperModel", "BazookaModel"};
 	public readonly int[] CameraRecoilOnShot = new int[]{1, 2, 1, 3, 1, 3};
 	public readonly float[] WeaponRecoilBackwardsOnShot = new float[]{1f, 2f, 1f, 4f, 6f, 20f};
@@ -85,8 +85,8 @@ public class Properties : MonoBehaviour
 	////////////
 
 	// BULLET //
-	public enum AmmunitionTypeEnum{Generic, Bouncy, Shrapnel, Explosive, Length}
-	public enum SecondaryEffectEnum{None, Healing, Heavy, Delay, Length}
+	public enum AmmunitionType{Generic, Bouncy, Shrapnel, Explosive, Length}
+	public enum SecondaryEffect{None, Healing, Heavy, Delay, Length}
 	public const string BulletModelFolder = "BulletModels";
 	public const float BulletAbleToHitDelay = 0.1f;
 	public readonly string[] BulletModelNames = new string[]{"DefaultBulletModel", "RifleBulletModel", "MachinegunBulletModel", "ShotgunBulletModel", "SniperBulletModel", "BazookaBulletModel"};
@@ -116,54 +116,54 @@ public class Properties : MonoBehaviour
 	public readonly AllowedWeaponEffectCombinations[] WeaponRestrictions = new AllowedWeaponEffectCombinations[]
 	{
 		new AllowedWeaponEffectCombinations(
-			WeaponTypeEnum.Default, 
-			new AmmunitionTypeEnum[]{AmmunitionTypeEnum.Generic}, 
-			new SecondaryEffectEnum[]{SecondaryEffectEnum.None}
+			WeaponType.Default, 
+			new AmmunitionType[]{AmmunitionType.Generic}, 
+			new SecondaryEffect[]{SecondaryEffect.None}
 		),
 		new AllowedWeaponEffectCombinations(
-			WeaponTypeEnum.Rifle, 
-			new AmmunitionTypeEnum[]{AmmunitionTypeEnum.Generic, AmmunitionTypeEnum.Bouncy, AmmunitionTypeEnum.Shrapnel, AmmunitionTypeEnum.Explosive}, 
-			new SecondaryEffectEnum[]{SecondaryEffectEnum.None, SecondaryEffectEnum.Healing, SecondaryEffectEnum.Heavy, SecondaryEffectEnum.Delay}
+			WeaponType.Rifle, 
+			new AmmunitionType[]{AmmunitionType.Generic, AmmunitionType.Bouncy, AmmunitionType.Shrapnel, AmmunitionType.Explosive}, 
+			new SecondaryEffect[]{SecondaryEffect.None, SecondaryEffect.Healing, SecondaryEffect.Heavy, SecondaryEffect.Delay}
 		),
 		new AllowedWeaponEffectCombinations(
-			WeaponTypeEnum.MachineGun, 
-			new AmmunitionTypeEnum[]{AmmunitionTypeEnum.Generic, AmmunitionTypeEnum.Bouncy, AmmunitionTypeEnum.Shrapnel, AmmunitionTypeEnum.Explosive}, 
-			new SecondaryEffectEnum[]{SecondaryEffectEnum.None, SecondaryEffectEnum.Healing, SecondaryEffectEnum.Heavy, SecondaryEffectEnum.Delay}
+			WeaponType.MachineGun, 
+			new AmmunitionType[]{AmmunitionType.Generic, AmmunitionType.Bouncy, AmmunitionType.Shrapnel, AmmunitionType.Explosive}, 
+			new SecondaryEffect[]{SecondaryEffect.None, SecondaryEffect.Healing, SecondaryEffect.Heavy, SecondaryEffect.Delay}
 		),
 		new AllowedWeaponEffectCombinations(
-			WeaponTypeEnum.Shotgun, 
-			new AmmunitionTypeEnum[]{AmmunitionTypeEnum.Generic, AmmunitionTypeEnum.Bouncy}, 
-			new SecondaryEffectEnum[]{SecondaryEffectEnum.None, SecondaryEffectEnum.Healing, SecondaryEffectEnum.Heavy, SecondaryEffectEnum.Delay}
+			WeaponType.Shotgun, 
+			new AmmunitionType[]{AmmunitionType.Generic, AmmunitionType.Bouncy}, 
+			new SecondaryEffect[]{SecondaryEffect.None, SecondaryEffect.Healing, SecondaryEffect.Heavy, SecondaryEffect.Delay}
 		),
 		new AllowedWeaponEffectCombinations(
-			WeaponTypeEnum.Sniper, 
-			new AmmunitionTypeEnum[]{AmmunitionTypeEnum.Generic, AmmunitionTypeEnum.Bouncy, AmmunitionTypeEnum.Shrapnel, AmmunitionTypeEnum.Explosive}, 
-			new SecondaryEffectEnum[]{SecondaryEffectEnum.None, SecondaryEffectEnum.Healing}
+			WeaponType.Sniper, 
+			new AmmunitionType[]{AmmunitionType.Generic, AmmunitionType.Bouncy, AmmunitionType.Shrapnel, AmmunitionType.Explosive}, 
+			new SecondaryEffect[]{SecondaryEffect.None, SecondaryEffect.Healing}
 		),
 		new AllowedWeaponEffectCombinations(
-			WeaponTypeEnum.Bazooka, 
-			new AmmunitionTypeEnum[]{AmmunitionTypeEnum.Explosive}, 
-			new SecondaryEffectEnum[]{SecondaryEffectEnum.None, SecondaryEffectEnum.Healing}
+			WeaponType.Bazooka, 
+			new AmmunitionType[]{AmmunitionType.Explosive}, 
+			new SecondaryEffect[]{SecondaryEffect.None, SecondaryEffect.Healing}
 		)
 	};
 
 	public readonly AllowedSecondaryEffects[] AmmunitionRestrictions = new AllowedSecondaryEffects[]
 	{
 		new AllowedSecondaryEffects(
-			AmmunitionTypeEnum.Generic,
-			new SecondaryEffectEnum[]{SecondaryEffectEnum.None, SecondaryEffectEnum.Heavy, SecondaryEffectEnum.Delay}
+			AmmunitionType.Generic,
+			new SecondaryEffect[]{SecondaryEffect.None, SecondaryEffect.Heavy, SecondaryEffect.Delay}
 		),
 		new AllowedSecondaryEffects(
-			AmmunitionTypeEnum.Bouncy,
-			new SecondaryEffectEnum[]{SecondaryEffectEnum.None, SecondaryEffectEnum.Healing, SecondaryEffectEnum.Heavy, SecondaryEffectEnum.Delay}
+			AmmunitionType.Bouncy,
+			new SecondaryEffect[]{SecondaryEffect.None, SecondaryEffect.Healing, SecondaryEffect.Heavy, SecondaryEffect.Delay}
 		),
 		new AllowedSecondaryEffects(
-			AmmunitionTypeEnum.Shrapnel,
-			new SecondaryEffectEnum[]{SecondaryEffectEnum.None, SecondaryEffectEnum.Healing, SecondaryEffectEnum.Heavy, SecondaryEffectEnum.Delay}
+			AmmunitionType.Shrapnel,
+			new SecondaryEffect[]{SecondaryEffect.None, SecondaryEffect.Healing, SecondaryEffect.Heavy, SecondaryEffect.Delay}
 		),
 		new AllowedSecondaryEffects(
-			AmmunitionTypeEnum.Explosive,
-			new SecondaryEffectEnum[]{SecondaryEffectEnum.None, SecondaryEffectEnum.Healing, SecondaryEffectEnum.Heavy, SecondaryEffectEnum.Delay}
+			AmmunitionType.Explosive,
+			new SecondaryEffect[]{SecondaryEffect.None, SecondaryEffect.Healing, SecondaryEffect.Heavy, SecondaryEffect.Delay}
 		)
 	};
 	////////////
@@ -171,6 +171,7 @@ public class Properties : MonoBehaviour
 	// WEAPON SPAWN PLATFORM //
 	public const float WeaponSpawnTime = 10f;
 	public const float PlatformWeaponRotationSpeed = 100f;
+	public const int WeaponSpawnPlatformLayer = 13;
 	///////////////////////////
 
 	// GAME CONTROLLER //
@@ -200,11 +201,11 @@ public class Properties : MonoBehaviour
 
 	public class AllowedWeaponEffectCombinations
 	{
-		public WeaponTypeEnum WeaponType;
-		public AmmunitionTypeEnum[] AmmunitionTypes;
-		public SecondaryEffectEnum[] SecondaryEffects;
+		public WeaponType WeaponType;
+		public AmmunitionType[] AmmunitionTypes;
+		public SecondaryEffect[] SecondaryEffects;
 
-		public AllowedWeaponEffectCombinations(WeaponTypeEnum WeaponType, AmmunitionTypeEnum[] AmmunitionTypes, SecondaryEffectEnum[] SecondaryEffects)
+		public AllowedWeaponEffectCombinations(WeaponType WeaponType, AmmunitionType[] AmmunitionTypes, SecondaryEffect[] SecondaryEffects)
 		{
 			this.WeaponType = WeaponType;
 			this.AmmunitionTypes = AmmunitionTypes;
@@ -214,10 +215,10 @@ public class Properties : MonoBehaviour
 
 	public class AllowedSecondaryEffects
 	{
-		public AmmunitionTypeEnum AmmunitionType;
-		public SecondaryEffectEnum[] SecondaryEffects;
+		public AmmunitionType AmmunitionType;
+		public SecondaryEffect[] SecondaryEffects;
 		
-		public AllowedSecondaryEffects(AmmunitionTypeEnum AmmunitionType, SecondaryEffectEnum[] SecondaryEffects)
+		public AllowedSecondaryEffects(AmmunitionType AmmunitionType, SecondaryEffect[] SecondaryEffects)
 		{
 			this.AmmunitionType = AmmunitionType;
 			this.SecondaryEffects = SecondaryEffects;

@@ -9,8 +9,8 @@ public class Explosion : MonoBehaviour
 	public float LifeTime;
 	public float CurLifeTime;
 	
-	public Properties.AmmunitionTypeEnum AmmunitionType;
-	public Properties.SecondaryEffectEnum SecondaryEffect;
+	public Properties.AmmunitionType AmmunitionType;
+	public Properties.SecondaryEffect SecondaryEffect;
 
 	private MeshRenderer _renderer;
 	private bool _initialized = false;
@@ -43,8 +43,8 @@ public class Explosion : MonoBehaviour
 		                 Properties.Singleton.ExplosionDamage [WeaponType] 
 								* Properties.Singleton.BulletDamage [WeaponType] 
 								* Properties.ExplosionEffectBulletDamageMultiplier
-								* ((Properties.SecondaryEffectEnum)SecondaryEffect == Properties.SecondaryEffectEnum.Delay ? Properties.DelayEffectDamageMultiplier : 1f)
-								* ((Properties.SecondaryEffectEnum)SecondaryEffect == Properties.SecondaryEffectEnum.Heavy ? Properties.HeavyEffectDamageMultiplier : 1f),
+								* ((Properties.SecondaryEffect)SecondaryEffect == Properties.SecondaryEffect.Delay ? Properties.DelayEffectDamageMultiplier : 1f)
+								* ((Properties.SecondaryEffect)SecondaryEffect == Properties.SecondaryEffect.Heavy ? Properties.HeavyEffectDamageMultiplier : 1f),
 		                target.localScale * Properties.Singleton.ExplosionEndSize [WeaponType],
 		                Properties.ExplosionLifeTime,
 		                1f / Properties.ExplosionLifeTime,
@@ -58,17 +58,17 @@ public class Explosion : MonoBehaviour
 		this.EndScale = EndScale;
 		this.LifeTime = LifeTime;
 		this.ScalingSpeed = ScalingSpeed;
-		this.SecondaryEffect = (Properties.SecondaryEffectEnum)SecondaryEffect;
+		this.SecondaryEffect = (Properties.SecondaryEffect)SecondaryEffect;
 		this.CurLifeTime = LifeTime;
-		AmmunitionType = Properties.AmmunitionTypeEnum.Explosive;
+		AmmunitionType = Properties.AmmunitionType.Explosive;
 		_initialized = true;
 
 		SoundManager.PlayClipAt (
-			SoundManager.GetClip ((int)Properties.SoundsEnum.Explosion), 
+			SoundManager.GetClip ((int)Properties.Sounds.Explosion), 
 			transform.position, 
-			Properties.Singleton.SoundDefaultVolumes [(int)Properties.SoundsEnum.Explosion],
-			Properties.Singleton.SoundDefaultMinDistances [(int)Properties.SoundsEnum.Explosion] * EndScale.magnitude / 110f,
-			Properties.Singleton.SoundDefaultMaxDistances [(int)Properties.SoundsEnum.Explosion] * EndScale.magnitude / 110f
+			Properties.Singleton.SoundDefaultVolumes [(int)Properties.Sounds.Explosion],
+			Properties.Singleton.SoundDefaultMinDistances [(int)Properties.Sounds.Explosion] * EndScale.magnitude / 110f,
+			Properties.Singleton.SoundDefaultMaxDistances [(int)Properties.Sounds.Explosion] * EndScale.magnitude / 110f
 			);
 	}
 	
@@ -79,7 +79,7 @@ public class Explosion : MonoBehaviour
 		if (Info.gameObject.layer == Properties.AvatarLayer) 
 		{
 			PlayerController _hitPlayer = Info.transform.parent.GetComponent<PlayerController>();
-			if(_hitPlayer.networkView.isMine && SecondaryEffect == Properties.SecondaryEffectEnum.Healing)
+			if(_hitPlayer.networkView.isMine && SecondaryEffect == Properties.SecondaryEffect.Healing)
 				_hitPlayer.GetHit(Mathf.RoundToInt((-1) * Damage));
 			else
 				_hitPlayer.GetHit(Mathf.RoundToInt(Damage), GameController.GetUserEntry(networkView.owner).ID, (int)AmmunitionType);
