@@ -9,12 +9,12 @@ public class Statistics : MonoBehaviour
 	public GameObject WinGameMessage;
 	public List<EntryCombination> Entries = new List<EntryCombination>();
 
-	public void DisplayWinScreen(string UserName)
+	public void DisplayWinScreen(string userName)
 	{
 		gameObject.SetActive (true);
 		WinGameMessage.SetActive (true);
-		Text _myWinText = WinGameMessage.transform.FindChild ("Text").GetComponent<Text> ();
-		_myWinText.text = _myWinText.text.Replace ("$", UserName);
+		Text MyWinText = WinGameMessage.transform.FindChild ("Text").GetComponent<Text> ();
+		MyWinText.text = MyWinText.text.Replace ("$", userName);
 	}
 
 	void OnEnable()

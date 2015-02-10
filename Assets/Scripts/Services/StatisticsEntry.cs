@@ -8,10 +8,10 @@ public class StatisticsEntry : MonoBehaviour
 	public Text Kills;
 	public Text Deaths;
 
-	public void UpdateEntry(GameController.UserEntry User)
+	public void UpdateEntry(GameController.UserEntry user)
 	{
-		this.Name.text = User.UserName;
-		this.Kills.text = User.Kills.ToString ();
-		this.Deaths.text = User.Deaths.ToString ();
+		Name.text = user.UserName;
+		Kills.text = user.Kills.ToString ();
+		Deaths.text = user.Deaths.ToString ();
 	}
 }

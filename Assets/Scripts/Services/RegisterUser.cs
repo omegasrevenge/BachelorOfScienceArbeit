@@ -5,15 +5,15 @@ public class RegisterUser : MonoBehaviour
 {
 	public GameController.UserEntry MyUserEntry;
 
-	public static void Register(RequiredInformation Info)
+	public static void Register(RequiredInformation info)
 	{
-		RegisterUser _reg = ((GameObject)Network.Instantiate(
+		RegisterUser Reg = ((GameObject)Network.Instantiate(
 			Resources.Load("RegisterUser"), 
 			Vector3.zero, 
 			Quaternion.identity, 1))
 			.GetComponent<RegisterUser>();
 
-		_reg.networkView.RPC ("RPCAdmitInfo", RPCMode.AllBuffered, Info.UserName);
+		Reg.networkView.RPC ("RPCAdmitInfo", RPCMode.AllBuffered, info.UserName);
 	}
 
 	/// <summary>
@@ -25,16 +25,16 @@ public class RegisterUser : MonoBehaviour
 		
 		for (int i = 0; i < GameController.Singleton.transform.childCount; i++) 
 		{
-			RegisterUser _regUserObj = GameController.Singleton.transform.GetChild(i).GetComponent<RegisterUser>();
+			RegisterUser RegUserObj = GameController.Singleton.transform.GetChild(i).GetComponent<RegisterUser>();
 
-			_regUserObj.networkView.RPC("RPCUpdateID", RPCMode.AllBuffered, i);
+			RegUserObj.networkView.RPC("RPCUpdateID", RPCMode.AllBuffered, i);
 		}
 	}
 
 	[RPC]
-	public void RPCUpdateID(int NewID)
+	public void RPCUpdateID(int newID)
 	{
-		MyUserEntry.ID = NewID;
+		MyUserEntry.ID = newID;
 	}
 
 	[RPC]
@@ -57,9 +57,9 @@ public class RegisterUser : MonoBehaviour
 		public string UserName;
 		public int ID;
 
-		public RequiredInformation(string UserName)
+		public RequiredInformation(string userName)
 		{
-			this.UserName = UserName;
+			UserName = userName;
 		}
 	}
 }

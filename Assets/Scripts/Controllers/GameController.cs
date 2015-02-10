@@ -27,6 +27,8 @@ public class GameController : MonoBehaviour
 	[HideInInspector]
 	public GameObject CurMap;
 
+	public int PlayersFinishedLoading = 0;
+
 	public List<UserEntry> Users = new List<UserEntry> (); //All currently registered users. Contains info like user name.
 
 	public string SelectedMap = "MapSmallArena";
@@ -34,6 +36,7 @@ public class GameController : MonoBehaviour
 	public int TotalConnectionNumber = 0;
 
 	private bool _timeout = true;
+
 
 	public HUDController MyHUD
 	{
@@ -92,6 +95,19 @@ public class GameController : MonoBehaviour
 
 		if(CurMap == null)
 			Network.Instantiate (Resources.Load(SelectedMap), Vector3.zero, Quaternion.identity, 1);
+	}
+
+	public void PlayerFinishedLoading()
+	{
+		networkView.RPC ("RPCPlayerFinishedLoading", RPCMode.AllBuffered);
+	}
+
+	[RPC]
+	public void RPCPlayerFinishedLoading()
+	{
+		PlayersFinishedLoading++;
+		if (Network.isServer && PlayersFinishedLoading == Users.Count)
+						StartGameCountDown ();
 	}
 
 	public void StartGameCountDown()
@@ -298,6 +314,8 @@ public class GameController : MonoBehaviour
 		GameObject _cam = GameObject.FindGameObjectWithTag ("MainCamera");
 		if(_cam != null)
 			Destroy (_cam);
+
+		PlayersFinishedLoading = 0;
 	}
 
 	public void Respawn(float RespawnTime)
