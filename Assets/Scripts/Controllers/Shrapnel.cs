@@ -17,31 +17,31 @@ public class Shrapnel : MonoBehaviour
 			Network.Destroy (networkView.viewID);
 	}
 
-	public static void CreateAt(Transform target, int WeaponType, int AmmunitionType, int SecondaryEffect)
+	public static void CreateAt(Transform target, int weaponType, int ammunitionType, int secondaryEffect)
 	{
-		GameObject _shrapnel = (GameObject)Network.Instantiate (Resources.Load ("Shrapnel"), target.position, target.rotation, 1);
-		_shrapnel.GetComponent<Shrapnel>().networkView.RPC ("RPCInitialize", 
+		GameObject Shrapnel = (GameObject)Network.Instantiate (Resources.Load ("Shrapnel"), target.position, target.rotation, 1);
+		Shrapnel.GetComponent<Shrapnel>().networkView.RPC ("RPCInitialize", 
 		                                                    RPCMode.AllBuffered, 
-		                                                    WeaponType, 
-		                                                    AmmunitionType, 
-		                                                    SecondaryEffect, 
-		                                                    Properties.Singleton.ShrapnelSize [WeaponType]);
+		                                                    weaponType, 
+		                                                    ammunitionType, 
+		                                                    secondaryEffect, 
+		                                                    Properties.Singleton.ShrapnelSize [weaponType]);
 	}
 
 	[RPC]
-	public void RPCInitialize(int WeaponType, int AmmunitionType, int SecondaryEffect, float ScaleModifier)
+	public void RPCInitialize(int weaponType, int ammunitionType, int secondaryEffect, float scaleModifier)
 	{
-		GetComponent<Shrapnel>().LifeTime = Properties.Singleton.ShrapnelLifeTime [WeaponType];
-		ShrapnelPiece[] _pieces = GetComponentsInChildren<ShrapnelPiece> ();
-		foreach (ShrapnelPiece piece in _pieces)
-			piece.Initialize(WeaponType, AmmunitionType, SecondaryEffect);
-		transform.localScale *= ScaleModifier;
+		GetComponent<Shrapnel>().LifeTime = Properties.Singleton.ShrapnelLifeTime [weaponType];
+		ShrapnelPiece[] Pieces = GetComponentsInChildren<ShrapnelPiece> ();
+		foreach (ShrapnelPiece Piece in Pieces)
+			Piece.Initialize(weaponType, ammunitionType, secondaryEffect);
+		transform.localScale *= scaleModifier;
 		SoundManager.PlayClipAt (
 			SoundManager.GetClip ((int)Properties.Sounds.Shrapnel), 
 			transform.position, 
 			Properties.Singleton.SoundDefaultVolumes [(int)Properties.Sounds.Shrapnel],
-			Properties.Singleton.SoundDefaultMinDistances [(int)Properties.Sounds.Shrapnel] * ScaleModifier,
-			Properties.Singleton.SoundDefaultMaxDistances [(int)Properties.Sounds.Shrapnel] * ScaleModifier
+			Properties.Singleton.SoundDefaultMinDistances [(int)Properties.Sounds.Shrapnel] * scaleModifier,
+			Properties.Singleton.SoundDefaultMaxDistances [(int)Properties.Sounds.Shrapnel] * scaleModifier
 			);
 	}
 }

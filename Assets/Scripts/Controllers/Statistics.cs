@@ -20,24 +20,24 @@ public class Statistics : MonoBehaviour
 	void OnEnable()
 	{
 		Entries.Clear ();
-		foreach (GameController.UserEntry user in GameController.Singleton.Users) 
+		foreach (GameController.UserEntry User in GameController.Singleton.Users) 
 		{
 			StatisticsEntry _statEntry = ((GameObject)Instantiate(EntryPrefab, transform.position, transform.rotation)).GetComponent<StatisticsEntry>();
-			EntryCombination _newCombination = new EntryCombination(user, _statEntry);
+			EntryCombination _newCombination = new EntryCombination(User, _statEntry);
 			Entries.Add(_newCombination);
 			_statEntry.GetComponent<RectTransform>().SetParent(transform, false);
 			_statEntry.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, -Entries.Count * Properties.StatisticsEntrySpawnDistance);
-			user.OnStatisticsUpdated += _statEntry.UpdateEntry;
-			_statEntry.UpdateEntry(user);
+			User.OnStatisticsUpdated += _statEntry.UpdateEntry;
+			_statEntry.UpdateEntry(User);
 		}
 	}
 
 	void OnDisable()
 	{
-		foreach (EntryCombination entry in Entries) 
+		foreach (EntryCombination Entry in Entries) 
 		{
-			entry.MyUserEntry.OnStatisticsUpdated -= entry.MyStatisticsEntry.UpdateEntry;
-			Destroy (entry.MyStatisticsEntry.gameObject);
+			Entry.MyUserEntry.OnStatisticsUpdated -= Entry.MyStatisticsEntry.UpdateEntry;
+			Destroy (Entry.MyStatisticsEntry.gameObject);
 		}
 		Entries.Clear ();
 		WinGameMessage.SetActive (false);
@@ -48,10 +48,10 @@ public class Statistics : MonoBehaviour
 		public GameController.UserEntry MyUserEntry;
 		public StatisticsEntry MyStatisticsEntry;
 
-		public EntryCombination(GameController.UserEntry UserEntry, StatisticsEntry StatisticsEntry)
+		public EntryCombination(GameController.UserEntry userEntry, StatisticsEntry statisticsEntry)
 		{
-			MyUserEntry = UserEntry;
-			MyStatisticsEntry = StatisticsEntry;
+			MyUserEntry = userEntry;
+			MyStatisticsEntry = statisticsEntry;
 		}
 	}
 }

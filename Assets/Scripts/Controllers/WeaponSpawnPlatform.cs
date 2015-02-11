@@ -10,7 +10,7 @@ public class WeaponSpawnPlatform : MonoBehaviour
 	[HideInInspector]
 	public GameObject MyWeapon;
 	[HideInInspector]
-	public int MyWeaponType;
+	public Properties.WeaponType MyWeaponType;
 
 	void Update () 
 	{
@@ -30,13 +30,13 @@ public class WeaponSpawnPlatform : MonoBehaviour
 	}
 
 	[RPC]
-	public void RPCSummonWeapon(int WeaponType)
+	public void RPCSummonWeapon(int weaponType)
 	{
-		MyWeaponType = WeaponType;
+		MyWeaponType = (Properties.WeaponType)weaponType;
 
 		MyWeapon = 
 			(GameObject)Instantiate (
-				Resources.Load (Properties.WeaponModelFolder + "/" + Properties.Singleton.WeaponModelNames [MyWeaponType]), 
+				Resources.Load (Properties.WeaponModelFolder + "/" + Properties.Singleton.WeaponModelNames [weaponType]), 
 				Vector3.zero, 
 				Quaternion.identity
 				); 
@@ -63,10 +63,10 @@ public class WeaponSpawnPlatform : MonoBehaviour
 		    && MyWeapon != null 
 		    && other.transform.parent.GetComponent<PlayerController>().MyWeapon.ShotsQueued == 0) 
 		{
-			int AmmunitionType = (int)WeaponController.ChooseAmmunitionType((Properties.WeaponType)MyWeaponType);
-			int SecondaryEffect = (int)WeaponController.ChooseSecondaryEffect((Properties.WeaponType)MyWeaponType, (Properties.AmmunitionType)AmmunitionType);
+			int AmmunitionType = (int)WeaponController.ChooseAmmunitionType(MyWeaponType);
+			int SecondaryEffect = (int)WeaponController.ChooseSecondaryEffect(MyWeaponType, (Properties.AmmunitionType)AmmunitionType);
 
-			other.transform.parent.GetComponent<PlayerController>().MyWeapon.PickupNew(MyWeaponType, AmmunitionType, SecondaryEffect);
+			other.transform.parent.GetComponent<PlayerController>().MyWeapon.PickupNew((int)MyWeaponType, AmmunitionType, SecondaryEffect);
 
 			networkView.RPC("RPCDestroyWeapon", RPCMode.AllBuffered);
 		}

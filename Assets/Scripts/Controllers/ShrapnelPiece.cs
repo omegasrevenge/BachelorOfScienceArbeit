@@ -9,16 +9,17 @@ public class ShrapnelPiece : MonoBehaviour
 
 	public float Damage;
 
-	public void Initialize(int WeaponType, int AmmunitionType, int SecondaryEffect)
+	public void Initialize(int weaponType, int ammunitionType, int secondaryEffect)
 	{
-		this.AmmunitionType = (Properties.AmmunitionType)AmmunitionType;
-		this.SecondaryEffect = (Properties.SecondaryEffect)SecondaryEffect;
-		this.WeaponType = (Properties.WeaponType)WeaponType;
-		Damage = Properties.Singleton.ShrapnelDamage [WeaponType] 
-			* Properties.Singleton.BulletDamage [WeaponType] 
+		AmmunitionType = (Properties.AmmunitionType)ammunitionType;
+		SecondaryEffect = (Properties.SecondaryEffect)secondaryEffect;
+		WeaponType = (Properties.WeaponType)weaponType;
+
+		Damage = Properties.Singleton.ShrapnelDamage [weaponType] 
+			* Properties.Singleton.BulletDamage [weaponType] 
 			* Properties.ShrapnelEffectBulletDamageMultiplier
-			* ((Properties.SecondaryEffect)SecondaryEffect == Properties.SecondaryEffect.Delay ? Properties.DelayEffectDamageMultiplier : 1f)
-			* ((Properties.SecondaryEffect)SecondaryEffect == Properties.SecondaryEffect.Heavy ? Properties.HeavyEffectDamageMultiplier : 1f);
+			* ((Properties.SecondaryEffect)secondaryEffect == Properties.SecondaryEffect.Delay ? Properties.DelayEffectDamageMultiplier : 1f)
+			* ((Properties.SecondaryEffect)secondaryEffect == Properties.SecondaryEffect.Heavy ? Properties.HeavyEffectDamageMultiplier : 1f);
 		GetComponent<Rigidbody> ().AddForce (transform.forward * Properties.ShrapnelFlyingSpeed, ForceMode.Impulse);
 	}
 
@@ -28,11 +29,11 @@ public class ShrapnelPiece : MonoBehaviour
 
 		if (Info.collider.gameObject.layer == Properties.AvatarLayer) 
 		{
-			PlayerController _hitPlayer = Info.collider.transform.parent.GetComponent<PlayerController>();
-			if(_hitPlayer.networkView.isMine && SecondaryEffect == Properties.SecondaryEffect.Healing)
-				_hitPlayer.GetHit(Mathf.RoundToInt((-1) * Damage));
+			PlayerController HitPlayer = Info.collider.transform.parent.GetComponent<PlayerController>();
+			if(HitPlayer.networkView.isMine && SecondaryEffect == Properties.SecondaryEffect.Healing)
+				HitPlayer.GetHit(Mathf.RoundToInt((-1) * Damage));
 			else
-				_hitPlayer.GetHit(Mathf.RoundToInt(Damage), GameController.GetUserEntry(networkView.owner).ID, (int)AmmunitionType);
+				HitPlayer.GetHit(Mathf.RoundToInt(Damage), GameController.GetUserEntry(networkView.owner).ID, (int)AmmunitionType);
 		}
 
 		networkView.RPC ("RPCDestroyShrapnelPiece", RPCMode.AllBuffered);

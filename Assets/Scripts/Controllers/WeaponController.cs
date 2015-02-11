@@ -16,13 +16,9 @@ public class WeaponController : MonoBehaviour
 
 	public float CurrentAccuracyDecay = 0f;
 
-	public float Accuracy;
-	private float _curAccuracy;
-	public int AmmunitionCount;
-	public int Damage;
 	public int CurAmmunition;
 
-	private float TimerSinceLastAttack = 0f;
+	private float TimerSinceLastAttack = 0f; 
 	private Properties MyProperties;
 	private bool ShootOnlyOnPress = true;
 

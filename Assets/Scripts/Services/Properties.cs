@@ -113,6 +113,7 @@ public class Properties : MonoBehaviour
 	public const float ExplosionEffectBulletDamageMultiplier = 0.5f;
 	public const float ExplosionLifeTime = 0.5f;
 	public readonly float[] ExplosionEndSize = new float[]{0f, 50f, 30f, 0f, 50f, 30f}; //How many times bigger than the bullet
+	public const float DefaultExplosionMagnitude = 110f;
 	public readonly AllowedWeaponEffectCombinations[] WeaponRestrictions = new AllowedWeaponEffectCombinations[]
 	{
 		new AllowedWeaponEffectCombinations(

@@ -12,21 +12,21 @@ public class Explosion : MonoBehaviour
 	public Properties.AmmunitionType AmmunitionType;
 	public Properties.SecondaryEffect SecondaryEffect;
 
-	private MeshRenderer _renderer;
-	private bool _initialized = false;
+	private MeshRenderer Renderer;
+	private bool Initialized = false;
 
 	void Start()
 	{
-		_renderer = GetComponent<MeshRenderer> ();
+		Renderer = GetComponent<MeshRenderer> ();
 	}
 	
 	void Update()
 	{
-		if (!_initialized) return;
+		if (!Initialized) return;
 
 		transform.localScale = Vector3.Lerp (transform.localScale, EndScale, Time.deltaTime * ScalingSpeed);
 
-		_renderer.material.color = new Color (_renderer.material.color.r, _renderer.material.color.g, _renderer.material.color.b, CurLifeTime/LifeTime);
+		Renderer.material.color = new Color (Renderer.material.color.r, Renderer.material.color.g, Renderer.material.color.b, CurLifeTime/LifeTime);
 
 		CurLifeTime -= Time.deltaTime;
 
@@ -61,14 +61,14 @@ public class Explosion : MonoBehaviour
 		this.SecondaryEffect = (Properties.SecondaryEffect)SecondaryEffect;
 		this.CurLifeTime = LifeTime;
 		AmmunitionType = Properties.AmmunitionType.Explosive;
-		_initialized = true;
+		Initialized = true;
 
 		SoundManager.PlayClipAt (
 			SoundManager.GetClip ((int)Properties.Sounds.Explosion), 
 			transform.position, 
 			Properties.Singleton.SoundDefaultVolumes [(int)Properties.Sounds.Explosion],
-			Properties.Singleton.SoundDefaultMinDistances [(int)Properties.Sounds.Explosion] * EndScale.magnitude / 110f,
-			Properties.Singleton.SoundDefaultMaxDistances [(int)Properties.Sounds.Explosion] * EndScale.magnitude / 110f
+			Properties.Singleton.SoundDefaultMinDistances [(int)Properties.Sounds.Explosion] * EndScale.magnitude / Properties.DefaultExplosionMagnitude,
+			Properties.Singleton.SoundDefaultMaxDistances [(int)Properties.Sounds.Explosion] * EndScale.magnitude / Properties.DefaultExplosionMagnitude
 			);
 	}
 	

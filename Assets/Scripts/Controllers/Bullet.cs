@@ -13,7 +13,7 @@ public class Bullet : MonoBehaviour
 	public Properties.AmmunitionType AmmunitionType;
 	public Properties.SecondaryEffect SecondaryEffect;
 
-	private bool _gettingDestroyed = false;
+	private bool GettingDestroyed = false;
 
 	void Start () 
 	{
@@ -25,7 +25,7 @@ public class Bullet : MonoBehaviour
 		LifeTime -= Time.deltaTime;
 		if ((LifeTime <= 0f && AmmunitionType != Properties.AmmunitionType.Bouncy) || transform.position.y < -1000f)
 		{
-			_gettingDestroyed = true;
+			GettingDestroyed = true;
 			Network.Destroy (networkView.viewID);
 		}
 	}
@@ -104,7 +104,7 @@ public class Bullet : MonoBehaviour
 		    && other.transform.parent.GetComponent<PlayerController> ().networkView.isMine
 		    && LifeTime > (MaxLifeTime - Properties.BulletAbleToHitDelay))
 			return;
-		if (_gettingDestroyed) return;
+		if (GettingDestroyed) return;
 		if (!networkView.isMine) return;
 		if (other.transform.parent != null && other.transform.parent.tag == "Bullet") return;
 
@@ -133,7 +133,7 @@ public class Bullet : MonoBehaviour
 		if (CurrentBounceCount >= MaxBounceCount) 
 		{
 			Network.Destroy (networkView.viewID);
-			_gettingDestroyed = true;
+			GettingDestroyed = true;
 		}
 	}
 }
