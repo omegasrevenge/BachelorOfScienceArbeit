@@ -16,30 +16,30 @@ public class PlayerController : MonoBehaviour
 
 	public bool PlayingHitSound = false;
 
-	public Weapon MyWeapon
+	public WeaponController MyWeapon
 	{
 		get
 		{
-			if(_myWeapon == null)
+			if(MyWeaponInstance == null)
 			{
 				foreach(GameObject weapon in GameController.Singleton.Weapons)
 				{
 					if(weapon.networkView.owner == networkView.owner)
 					{
-						_myWeapon = weapon.GetComponent<Weapon>();
+						MyWeaponInstance = weapon.GetComponent<WeaponController>();
 						break;
 					}
 				}
 			}
-			return _myWeapon;
+			return MyWeaponInstance;
 		}
 		set
 		{
-			_myWeapon = value;
+			MyWeaponInstance = value;
 		}
 	}
 
-	private Weapon _myWeapon;
+	private WeaponController MyWeaponInstance;
 
 	public float CurrentRecollorDuration = 0f;
 	
@@ -49,9 +49,9 @@ public class PlayerController : MonoBehaviour
 
 	public Transform WeaponAnchor;
 
-	private bool _gotHit = false;
-	private bool _gotRecollored = false;
-	private Color _myHitColor;
+	private bool GotHit = false;
+	private bool GotRecollored = false;
+	private Color MyHitColor;
 
 	void Start()
 	{
@@ -71,20 +71,20 @@ public class PlayerController : MonoBehaviour
 
 	void Update()
 	{
-		if (_gotHit) 
+		if (GotHit) 
 		{
-			_gotHit = false;
+			GotHit = false;
 			CurrentRecollorDuration = Properties.RecollorDurationAfterHit;
 			foreach(MeshRenderer rend in PlayerRenderer)
-				rend.material.color = _myHitColor;
-			_gotRecollored = true;
+				rend.material.color = MyHitColor;
+			GotRecollored = true;
 		}
 
 		CurrentRecollorDuration -= Time.deltaTime;
 
-		if (_gotRecollored && CurrentRecollorDuration <= 0f) 
+		if (GotRecollored && CurrentRecollorDuration <= 0f) 
 		{
-			_gotRecollored = false;
+			GotRecollored = false;
 			foreach(MeshRenderer rend in PlayerRenderer)
 				rend.material.color = Color.white;
 		}
@@ -107,14 +107,14 @@ public class PlayerController : MonoBehaviour
 		MyCamera = transform.FindChild ("Camera").GetComponent<Camera> ();
 		MyCamera.gameObject.SetActive (true);
 
-		MyWeapon = ((GameObject)Network.Instantiate (Resources.Load ("Weapon"), WeaponAnchor.position, WeaponAnchor.rotation, 1)).GetComponent<Weapon>();
+		MyWeapon = ((GameObject)Network.Instantiate (Resources.Load ("Weapon"), WeaponAnchor.position, WeaponAnchor.rotation, 1)).GetComponent<WeaponController>();
 		MyWeapon.transform.parent = WeaponAnchor;
 
 		if(GameController.GetUserEntry(networkView.owner).Deaths > 0)
 		{
 			int WeaponType = Random.Range(1, ((int)Properties.WeaponType.Length));
-			int AmmunitionType = (int)Weapon.ChooseAmmunitionType((Properties.WeaponType)WeaponType);
-			int SecondaryEffect = (int)Weapon.ChooseSecondaryEffect((Properties.WeaponType)WeaponType, (Properties.AmmunitionType)AmmunitionType);
+			int AmmunitionType = (int)WeaponController.ChooseAmmunitionType((Properties.WeaponType)WeaponType);
+			int SecondaryEffect = (int)WeaponController.ChooseSecondaryEffect((Properties.WeaponType)WeaponType, (Properties.AmmunitionType)AmmunitionType);
 			
 			MyWeapon.PickupNew(WeaponType, AmmunitionType, SecondaryEffect);
 		}
@@ -144,9 +144,9 @@ public class PlayerController : MonoBehaviour
 	[RPC]
 	public void RPCGetHit(int Damage, int SourceID, int WeaponType, int AmmunitionType, bool KilledByDirectHit)
 	{
-		_gotHit = true;
+		GotHit = true;
 		Health = Mathf.Clamp (Health - Damage, 0, Properties.MaxPlayerHealth);
-		_myHitColor = Damage < 0f ? Color.green : Color.red;
+		MyHitColor = Damage < 0f ? Color.green : Color.red;
 
 		if (!PlayingHitSound)
 						StartCoroutine ("CPlayHitSound");
@@ -224,18 +224,18 @@ public class PlayerController : MonoBehaviour
 		{
 			if(weapon.networkView.owner == networkView.owner)
 			{
-				MyWeapon = weapon.GetComponent<Weapon>();
+				MyWeapon = weapon.GetComponent<WeaponController>();
 				break;
 			}
 		}
 		
 		if(MyWeapon == null)
 		{
-			Weapon[] _weapons = GameObject.FindObjectsOfType<Weapon>();
-			foreach(Weapon weapon in _weapons)
-				if(weapon.networkView.owner == networkView.owner)
+			WeaponController[] Weapons = GameObject.FindObjectsOfType<WeaponController>();
+			foreach(WeaponController Weapon in Weapons)
+				if(Weapon.networkView.owner == networkView.owner)
 					{
-						MyWeapon = weapon.GetComponent<Weapon>();
+						MyWeapon = Weapon.GetComponent<WeaponController>();
 						break;
 					}
 		}

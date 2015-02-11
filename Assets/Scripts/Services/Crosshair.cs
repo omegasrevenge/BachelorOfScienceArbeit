@@ -8,7 +8,7 @@ public class Crosshair : MonoBehaviour
 	public Image CrosshairRight;
 	public Image CrosshairUp;
 	public Image CrosshairDown;
-	public Weapon MyWeapon;
+	public WeaponController MyWeapon;
 
 	private float _xOffset = 0f;
 	private float _yOffset = 0f;

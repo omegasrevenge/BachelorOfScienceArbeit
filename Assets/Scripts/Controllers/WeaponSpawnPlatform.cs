@@ -59,10 +59,12 @@ public class WeaponSpawnPlatform : MonoBehaviour
 	{
 		if (!networkView.isMine) return;
 
-		if (other.collider.gameObject.layer == Properties.AvatarLayer && MyWeapon != null) 
+		if (other.collider.gameObject.layer == Properties.AvatarLayer 
+		    && MyWeapon != null 
+		    && other.transform.parent.GetComponent<PlayerController>().MyWeapon.ShotsQueued == 0) 
 		{
-			int AmmunitionType = (int)Weapon.ChooseAmmunitionType((Properties.WeaponType)MyWeaponType);
-			int SecondaryEffect = (int)Weapon.ChooseSecondaryEffect((Properties.WeaponType)MyWeaponType, (Properties.AmmunitionType)AmmunitionType);
+			int AmmunitionType = (int)WeaponController.ChooseAmmunitionType((Properties.WeaponType)MyWeaponType);
+			int SecondaryEffect = (int)WeaponController.ChooseSecondaryEffect((Properties.WeaponType)MyWeaponType, (Properties.AmmunitionType)AmmunitionType);
 
 			other.transform.parent.GetComponent<PlayerController>().MyWeapon.PickupNew(MyWeaponType, AmmunitionType, SecondaryEffect);
 
