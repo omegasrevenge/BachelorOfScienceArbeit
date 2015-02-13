@@ -5,7 +5,7 @@ public class RegisterUser : MonoBehaviour
 {
 	public GameController.UserEntry MyUserEntry;
 
-	public static void Register(RequiredInformation info)
+	public static void Register(string userName)
 	{
 		RegisterUser Reg = ((GameObject)Network.Instantiate(
 			Resources.Load("RegisterUser"), 
@@ -13,7 +13,7 @@ public class RegisterUser : MonoBehaviour
 			Quaternion.identity, 1))
 			.GetComponent<RegisterUser>();
 
-		Reg.networkView.RPC ("RPCAdmitInfo", RPCMode.AllBuffered, info.UserName);
+		Reg.networkView.RPC ("RPCAdmitInfo", RPCMode.AllBuffered, userName);
 	}
 
 	/// <summary>
@@ -50,16 +50,5 @@ public class RegisterUser : MonoBehaviour
 	void OnDestroy()
 	{
 		GameController.RemoveUserEntry (MyUserEntry.ID);
-	}
-
-	public class RequiredInformation
-	{
-		public string UserName;
-		public int ID;
-
-		public RequiredInformation(string userName)
-		{
-			UserName = userName;
-		}
 	}
 }

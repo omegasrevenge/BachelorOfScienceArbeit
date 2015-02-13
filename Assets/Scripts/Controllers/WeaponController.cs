@@ -74,9 +74,9 @@ public class WeaponController : MonoBehaviour
 			);
 	}
 
-	public void PickupNew(int WeaponType, int AmmunitionType, int SecondaryEffect)
+	public void PickupNew(int weaponType, int ammunitionType, int secondaryEffect)
 	{
-		networkView.RPC ("RPCCreate", RPCMode.AllBuffered, WeaponType, AmmunitionType, SecondaryEffect);
+		networkView.RPC ("RPCCreate", RPCMode.AllBuffered, weaponType, ammunitionType, secondaryEffect);
 	}
 
 	public void PickupDefault()
@@ -88,28 +88,28 @@ public class WeaponController : MonoBehaviour
 	}
 
 	[RPC]
-	public void RPCCreate(int WeaponType, int AmmunitionType, int SecondaryEffect)
+	public void RPCCreate(int weaponType, int ammunitionType, int secondaryEffect)
 	{
 		if (WeaponModel != null)
 						Destroy (WeaponModel);
 
 		WeaponModel = 
 			(GameObject)Instantiate (
-				Resources.Load (Properties.WeaponModelFolder + "/" + Properties.Singleton.WeaponModelNames [WeaponType]), 
+				Resources.Load (Properties.WeaponModelFolder + "/" + Properties.Singleton.WeaponModelNames [weaponType]), 
 				transform.position, 
 				transform.rotation
 				); 
 
-		this.AmmunitionType = (Properties.AmmunitionType)AmmunitionType;
-		this.SecondaryEffect = (Properties.SecondaryEffect)SecondaryEffect;
-		this.WeaponType = (Properties.WeaponType)WeaponType;
+		AmmunitionType = (Properties.AmmunitionType)ammunitionType;
+		SecondaryEffect = (Properties.SecondaryEffect)secondaryEffect;
+		WeaponType = (Properties.WeaponType)weaponType;
 
 		WeaponModel.transform.parent = transform;
 		Nozzle = WeaponModel.transform.FindChild ("Nozzle");
-		ShootOnlyOnPress = Properties.Singleton.WeaponAttackSpeedValues [WeaponType] < 0.01f;
+		ShootOnlyOnPress = Properties.Singleton.WeaponAttackSpeedValues [weaponType] < 0.01f;
 		foreach (MeshRenderer rend in WeaponModel.GetComponentsInChildren<MeshRenderer>())
-			rend.material.color = Properties.Singleton.WeaponColors[SecondaryEffect];
-		CurAmmunition = Properties.Singleton.WeaponAmmunitionAmount [WeaponType];
+			rend.material.color = Properties.Singleton.WeaponColors[secondaryEffect];
+		CurAmmunition = Properties.Singleton.WeaponAmmunitionAmount [weaponType];
 		if (networkView.isMine) 
 		{
 			HUDController.Singleton.AmmunitionCounter.text = CurAmmunition.ToString();
@@ -154,12 +154,12 @@ public class WeaponController : MonoBehaviour
 			break;
 		case Properties.ShootingMode.Cone:
 			Nozzle.LookAt(TargetPos);
-			Bullet[] _myBullets = new Bullet[Nozzle.childCount];
-			for(int i = 0; i < _myBullets.Length; i++)
+			Bullet[] MyBullets = new Bullet[Nozzle.childCount];
+			for(int i = 0; i < MyBullets.Length; i++)
 			{
-				_myBullets[i] = ((GameObject)Network.Instantiate (Resources.Load ("Bullet"), Nozzle.GetChild(i).position, Nozzle.GetChild(i).rotation, 1)).GetComponent<Bullet>();
-				_myBullets[i].Initialize(weaponType, ammunitionType, secondaryEffect);
-				_myBullets[i].GetShot(Vector3.zero);
+				MyBullets[i] = ((GameObject)Network.Instantiate (Resources.Load ("Bullet"), Nozzle.GetChild(i).position, Nozzle.GetChild(i).rotation, 1)).GetComponent<Bullet>();
+				MyBullets[i].Initialize(weaponType, ammunitionType, secondaryEffect);
+				MyBullets[i].GetShot(Vector3.zero);
 			}
 			break;
 		}
@@ -199,24 +199,24 @@ public class WeaponController : MonoBehaviour
 		GameController.Singleton.Weapons.Remove (gameObject);
 	}
 	
-	public static Properties.AmmunitionType ChooseAmmunitionType(Properties.WeaponType WeaponType)
+	public static Properties.AmmunitionType ChooseAmmunitionType(Properties.WeaponType weaponType)
 	{
-		Properties.AllowedWeaponEffectCombinations _allowedCombo = Properties.Singleton.WeaponRestrictions [(int)WeaponType];
-		return _allowedCombo.AmmunitionTypes [Random.Range (0, _allowedCombo.AmmunitionTypes.Length)];
+		Properties.AllowedWeaponEffectCombinations AllowedCombo = Properties.Singleton.WeaponRestrictions [(int)weaponType];
+		return AllowedCombo.AmmunitionTypes [Random.Range (0, AllowedCombo.AmmunitionTypes.Length)];
 	}
 	
-	public static Properties.SecondaryEffect ChooseSecondaryEffect(Properties.WeaponType WeaponType, Properties.AmmunitionType AmmunitionType)
+	public static Properties.SecondaryEffect ChooseSecondaryEffect(Properties.WeaponType weaponType, Properties.AmmunitionType ammunitionType)
 	{
-		Properties.AllowedWeaponEffectCombinations _allowedCombo = Properties.Singleton.WeaponRestrictions [(int)WeaponType];
-		Properties.AllowedSecondaryEffects _allowedSecondary = Properties.Singleton.AmmunitionRestrictions [(int)AmmunitionType];
-		Properties.SecondaryEffect _myEffect = Properties.SecondaryEffect.None;
+		Properties.AllowedWeaponEffectCombinations AllowedCombo = Properties.Singleton.WeaponRestrictions [(int)weaponType];
+		Properties.AllowedSecondaryEffects AllowedSecondary = Properties.Singleton.AmmunitionRestrictions [(int)ammunitionType];
+		Properties.SecondaryEffect MyEffect = Properties.SecondaryEffect.None;
 		
 		do
 		{
-			_myEffect = _allowedSecondary.SecondaryEffects[Random.Range(0, _allowedSecondary.SecondaryEffects.Length)];
+			MyEffect = AllowedSecondary.SecondaryEffects[Random.Range(0, AllowedSecondary.SecondaryEffects.Length)];
 		} 
-		while(!_allowedCombo.SecondaryEffects.Contains(_myEffect));
+		while(!AllowedCombo.SecondaryEffects.Contains(MyEffect));
 		
-		return _myEffect;
+		return MyEffect;
 	}
 }

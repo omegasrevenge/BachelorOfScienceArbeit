@@ -75,8 +75,8 @@ public class PlayerController : MonoBehaviour
 		{
 			GotHit = false;
 			CurrentRecollorDuration = Properties.RecollorDurationAfterHit;
-			foreach(MeshRenderer rend in PlayerRenderer)
-				rend.material.color = MyHitColor;
+			foreach(MeshRenderer Rend in PlayerRenderer)
+				Rend.material.color = MyHitColor;
 			GotRecollored = true;
 		}
 
@@ -85,8 +85,8 @@ public class PlayerController : MonoBehaviour
 		if (GotRecollored && CurrentRecollorDuration <= 0f) 
 		{
 			GotRecollored = false;
-			foreach(MeshRenderer rend in PlayerRenderer)
-				rend.material.color = Color.white;
+			foreach(MeshRenderer Rend in PlayerRenderer)
+				Rend.material.color = Color.white;
 		}
 	}
 
@@ -194,18 +194,24 @@ public class PlayerController : MonoBehaviour
 		if (Dead) return;
 		Dead = true;
 
-		if(networkView.isMine)
-			HUDController.Singleton.MyActionBar.CreateEntry (KillerID, VictimID, WeaponType, AmmunitionType, KilledByDirectHit);
 		
-		GameController.UserEntry _killer = GameController.GetUserEntry (KillerID);
-		GameController.UserEntry _victim = GameController.GetUserEntry (VictimID);
+		GameController.UserEntry Killer = GameController.GetUserEntry (KillerID);
+		GameController.UserEntry Victim = GameController.GetUserEntry (VictimID);
 
-		_killer.UpdateStatistics (_killer.Kills + 1, _killer.Deaths);
-		_victim.UpdateStatistics (_victim.Kills, _victim.Deaths + 1);
+		Killer.UpdateStatistics (Killer.Kills + 1, Killer.Deaths);
+		Victim.UpdateStatistics (Victim.Kills, Victim.Deaths + 1);
 
-		foreach (Collider col in gameObject.GetComponentsInChildren<Collider>())
-			col.enabled = false;
+		foreach (Collider Col in gameObject.GetComponentsInChildren<Collider>())
+			Col.enabled = false;
 		StartCoroutine ("CDeath");
+		
+		if (networkView.isMine) 
+		{
+			HUDController.Singleton.MyActionBar.CreateEntry (KillerID, VictimID, WeaponType, AmmunitionType, KilledByDirectHit);
+
+			GameObject MyCheckPlayerDeath = new GameObject ("DebugPlayerNotDying");
+			MyCheckPlayerDeath.AddComponent<CheckPlayerDeath> ().StartCheck (this);
+		}
 	}
 
 	public IEnumerator CDeath()
@@ -216,15 +222,15 @@ public class PlayerController : MonoBehaviour
 			Destroy(Lead.gameObject);
 		}
 
-		float _dyingTime = Properties.DyingAnimationLength > 0.001f ? Properties.DyingAnimationLength : 0.001f;
+		float DyingTime = Mathf.Max (Properties.DyingAnimationLength, 0.001f); //guarantee this cannot be zero.
 
-		float _curDyingTime = _dyingTime;
+		float CurDyingTime = DyingTime;
 	
-		foreach (GameObject weapon in MyGameController.Weapons) 
+		foreach (GameObject Weapon in MyGameController.Weapons) 
 		{
-			if(weapon.networkView.owner == networkView.owner)
+			if(Weapon.networkView.owner == networkView.owner)
 			{
-				MyWeapon = weapon.GetComponent<WeaponController>();
+				MyWeapon = Weapon.GetComponent<WeaponController>();
 				break;
 			}
 		}
@@ -240,42 +246,47 @@ public class PlayerController : MonoBehaviour
 					}
 		}
 
-		MeshRenderer[] weaponRenderers = MyWeapon.gameObject.GetComponentsInChildren<MeshRenderer> ();
+		MeshRenderer[] WeaponRenderers = MyWeapon.gameObject.GetComponentsInChildren<MeshRenderer> ();
 
-		Projector _shadow = gameObject.GetComponentInChildren<Projector> ();
-		float _shadowMaxStrength = _shadow.farClipPlane;
+		Projector Shadow = gameObject.GetComponentInChildren<Projector> ();
+		float ShadowMaxStrength = Shadow.farClipPlane;
 
-		while ((_curDyingTime / _dyingTime) > 0f) 
+		while ((CurDyingTime / DyingTime) > 0f) 
 		{
 			yield return new WaitForEndOfFrame();
 
-			_curDyingTime -= Time.deltaTime;
+			CurDyingTime -= Time.deltaTime;
 
 			foreach(MeshRenderer rend in PlayerRenderer)
 			{
 				Color _col = rend.material.color;
-				rend.material.color = new Color(_col.r, _col.g, _col.b, _curDyingTime / _dyingTime);
+				rend.material.color = new Color(_col.r, _col.g, _col.b, CurDyingTime / DyingTime);
 			}
 			
-			foreach(MeshRenderer rend in weaponRenderers)
+			foreach(MeshRenderer Rend in WeaponRenderers)
 			{
-				Color _col = rend.material.color;
-				rend.material.color = new Color(_col.r, _col.g, _col.b, _curDyingTime / _dyingTime);
+				Color _col = Rend.material.color;
+				Rend.material.color = new Color(_col.r, _col.g, _col.b, CurDyingTime / DyingTime);
 			}
 
-			_shadow.farClipPlane = _shadowMaxStrength * (_curDyingTime / _dyingTime);
+			Shadow.farClipPlane = ShadowMaxStrength * (CurDyingTime / DyingTime);
 		}
 
 		if (networkView.isMine) 
-		{
-			MyCamera.transform.parent = null;
-			MyCamera.GetComponent<MouseLook>().enabled = false;
-
-			MyGameController.DestroyCamera = true;
-			MyGameController.Respawn(Properties.RespawnTimer);
-			Network.Destroy (MyWeapon.networkView.viewID);
-			Network.Destroy (networkView.viewID);
-		}
+			DestroyPlayer();
+	}
+	/// <summary>
+	/// Dirty Bugfix. Sometimes CDeath() stops in the middle of execution. This is meant to fix it, along with the CheckPlayerDeath class.
+	/// </summary>
+	public void DestroyPlayer()
+	{
+		MyCamera.transform.parent = null;
+		MyCamera.GetComponent<MouseLook>().enabled = false;
+		
+		MyGameController.DestroyCamera = true;
+		MyGameController.Respawn(Properties.RespawnTimer);
+		Network.Destroy (MyWeapon.networkView.viewID);
+		Network.Destroy (networkView.viewID);
 	}
 	
 	public void OnDestroy()

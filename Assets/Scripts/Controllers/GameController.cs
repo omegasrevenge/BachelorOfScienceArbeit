@@ -35,7 +35,7 @@ public class GameController : MonoBehaviour
 	public int MaxNumberAllowedClients = 3; // this is here and not in properties because every map could have a different amount
 	public int TotalConnectionNumber = 0;
 
-	private bool _timeout = true;
+	private bool Timeout = true;
 
 
 	public HUDController MyHUD
@@ -62,17 +62,17 @@ public class GameController : MonoBehaviour
 		OnNewUserEvent += RegisterNewUserFunction;
 	}
 	
-	public void RegisterNewUserFunction(UserEntry User)
+	public void RegisterNewUserFunction(UserEntry user)
 	{
-		User.OnStatisticsUpdated += CheckForVictory;
+		user.OnStatisticsUpdated += CheckForVictory;
 	}
 	
-	public void CheckForVictory(UserEntry User)
+	public void CheckForVictory(UserEntry user)
 	{
-		if (User.Kills < Properties.KillsToWin) return;
+		if (user.Kills < Properties.KillsToWin) return;
 
 		CurGameState = Properties.GameState.GameOver;
-		MyHUD.MyStatistics.DisplayWinScreen (User.UserName);
+		MyHUD.MyStatistics.DisplayWinScreen (user.UserName);
 		MyPlayer.GetComponent<PlayerController> ().MyCamera.GetComponent<MouseLook> ().enabled = false;
 	}
 
@@ -222,7 +222,7 @@ public class GameController : MonoBehaviour
     public void RequestHosts()
 	{
 		if(HasNetworkConnection) return;
-		_timeout = false;
+		Timeout = false;
 		MasterServer.RequestHostList(Properties.GameType);
 		StartCoroutine ("CCountdownTimeout");
 	}
@@ -233,16 +233,16 @@ public class GameController : MonoBehaviour
 
 		if (!HasNetworkConnection) 
 		{
-			_timeout = true;
+			Timeout = true;
 			MyHUD.SwitchToMainMenu();
 		}
 	}
 
-    private void OnMasterServerEvent(MasterServerEvent msEvent)
+    private void OnMasterServerEvent(MasterServerEvent MSEvent)
 	{
-		if (_timeout) return;
+		if (Timeout) return;
 
-		if(msEvent == MasterServerEvent.HostListReceived)
+		if(MSEvent == MasterServerEvent.HostListReceived)
 		{
 			HostData[] data = MasterServer.PollHostList();
 			if(data.Length>0) Network.Connect(data[data.Length-1]);
@@ -253,17 +253,12 @@ public class GameController : MonoBehaviour
 	{
 		CurGameState = Properties.GameState.Lobby;
 		MyHUD.SwitchToLobby ();
-		RegisterUser.Register (new RegisterUser.RequiredInformation(MyHUD.CurrentNickname));
+		RegisterUser.Register (MyHUD.CurrentNickname);
 	}
 	
 	void OnServerInitialized()
 	{
-		RegisterUser.Register (new RegisterUser.RequiredInformation(MyHUD.CurrentNickname));
-	}
-
-	void OnPlayerConnected(NetworkPlayer player)
-	{
-		//
+		RegisterUser.Register (MyHUD.CurrentNickname);
 	}
 
 	void OnPlayerDisconnected(NetworkPlayer origin) // is called ONLY ON THE SERVER! SAFE TO USE!
@@ -306,36 +301,36 @@ public class GameController : MonoBehaviour
 		SpawnPositions.Clear ();
 		WeaponSpawnPlatforms.Clear ();
 
-		foreach (UserEntry user in Users)
-				Destroy (user.MyRegisterObject.gameObject);
+		foreach (UserEntry User in Users)
+				Destroy (User.MyRegisterObject.gameObject);
 
 		Users.Clear ();
 
-		GameObject _cam = GameObject.FindGameObjectWithTag ("MainCamera");
-		if(_cam != null)
-			Destroy (_cam);
+		GameObject Cam = GameObject.FindGameObjectWithTag ("MainCamera");
+		if(Cam != null)
+			Destroy (Cam);
 
 		PlayersFinishedLoading = 0;
 	}
 
-	public void Respawn(float RespawnTime)
+	public void Respawn(float respawnTime)
 	{
 		if (CurGameState == Properties.GameState.GameOver) return;
 
-		StartCoroutine ("CRespawn", RespawnTime);
+		StartCoroutine ("CRespawn", respawnTime);
 	}
 	
-	public IEnumerator CRespawn(float RespawnTime)
+	public IEnumerator CRespawn(float respawnTime)
 	{
-		Countdown.CountDownFrom (RespawnTime);
-		yield return new WaitForSeconds(RespawnTime);
+		Countdown.CountDownFrom (respawnTime);
+		yield return new WaitForSeconds(respawnTime);
 		
 		if(CurGameState != Properties.GameState.GameOver)
 		{
 			if (DestroyCamera) 
 			{
-				Camera[] _myCams = GameObject.FindObjectsOfType<Camera> ();
-				foreach(Camera cam in _myCams)
+				Camera[] MyCams = GameObject.FindObjectsOfType<Camera> ();
+				foreach(Camera cam in MyCams)
 					Destroy(cam.gameObject);
 			}
 			
@@ -348,42 +343,42 @@ public class GameController : MonoBehaviour
 		return Mathf.Abs ((target - source).magnitude);
 	}
 
-	public static UserEntry AddUserEntry(NetworkPlayer User, string UserName)
+	public static UserEntry AddUserEntry(NetworkPlayer user, string userName)
 	{
-		UserEntry _newUser = new UserEntry (User, UserName);
+		UserEntry NewUser = new UserEntry (user, userName);
 
-		GameController.Singleton.Users.Add (_newUser);
+		GameController.Singleton.Users.Add (NewUser);
 
 		if (GameController.Singleton.OnNewUserEvent != null)
-			GameController.Singleton.OnNewUserEvent (_newUser);
+			GameController.Singleton.OnNewUserEvent (NewUser);
 
-		return _newUser;
+		return NewUser;
 	}
 
-	public static void RemoveUserEntry(int ID)
+	public static void RemoveUserEntry(int id)
 	{
-		UserEntry _myUserEntry = GetUserEntry (ID);
+		UserEntry MyUserEntry = GetUserEntry (id);
 
-		GameController.Singleton.Users.Remove (_myUserEntry);
+		GameController.Singleton.Users.Remove (MyUserEntry);
 
 		if (GameController.Singleton.OnRemoveUserEvent != null)
-			GameController.Singleton.OnRemoveUserEvent (_myUserEntry);
+			GameController.Singleton.OnRemoveUserEvent (MyUserEntry);
 	}
 
-	public static UserEntry GetUserEntry(int ID)
+	public static UserEntry GetUserEntry(int id)
 	{
-		foreach (UserEntry user in GameController.Singleton.Users)
-			if (user.ID == ID)
-				return user;
+		foreach (UserEntry User in GameController.Singleton.Users)
+			if (User.ID == id)
+				return User;
 		
 		return null;
 	}
 
-	public static UserEntry GetUserEntry(NetworkPlayer User)
+	public static UserEntry GetUserEntry(NetworkPlayer target)
 	{
-		foreach (UserEntry user in GameController.Singleton.Users)
-				if (user.User == User)
-					return user;
+		foreach (UserEntry Entry in GameController.Singleton.Users)
+				if (Entry.User == target)
+					return Entry;
 
 		return null;
 	}
@@ -391,7 +386,7 @@ public class GameController : MonoBehaviour
 	[System.Serializable]
 	public class UserEntry
 	{
-		public delegate void Updated(UserEntry User);
+		public delegate void Updated(UserEntry user);
 		public Updated OnStatisticsUpdated;
 
 		public NetworkPlayer User;
@@ -401,16 +396,16 @@ public class GameController : MonoBehaviour
 		public int Kills = 0;
 		public int Deaths = 0;
 
-		public UserEntry(NetworkPlayer User, string UserName)
+		public UserEntry(NetworkPlayer user, string userName)
 		{
-			this.User = User;
-			this.UserName = UserName;
+			User = user;
+			UserName = userName;
 		}
 
-		public void UpdateStatistics(int Kills, int Deaths)
+		public void UpdateStatistics(int kills, int deaths)
 		{
-			this.Kills = Kills;
-			this.Deaths = Deaths;
+			Kills = kills;
+			Deaths = deaths;
 			if (OnStatisticsUpdated != null)
 				OnStatisticsUpdated (this);
 		}
