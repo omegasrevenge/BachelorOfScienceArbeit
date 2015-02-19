@@ -34,32 +34,32 @@ public class Explosion : MonoBehaviour
 			Network.Destroy (networkView.viewID);
 	}
 	
-	public static void CreateAt(Transform target, int WeaponType, int SecondaryEffect)
+	public static void CreateAt(Transform target, int weaponType, int secondaryEffect)
 	{
 		Explosion _explosion = ((GameObject)Network.Instantiate (Resources.Load ("Explosion"), target.position, target.rotation, 1)).GetComponent<Explosion>();
 
 		_explosion.networkView.RPC ("RPCInitialize", 
 		                RPCMode.AllBuffered, 
-		                 Properties.Singleton.ExplosionDamage [WeaponType] 
-								* Properties.Singleton.BulletDamage [WeaponType] 
+		                 Properties.Singleton.ExplosionDamage [weaponType] 
+								* Properties.Singleton.BulletDamage [weaponType] 
 								* Properties.ExplosionEffectBulletDamageMultiplier
-								* ((Properties.SecondaryEffect)SecondaryEffect == Properties.SecondaryEffect.Delay ? Properties.DelayEffectDamageMultiplier : 1f)
-								* ((Properties.SecondaryEffect)SecondaryEffect == Properties.SecondaryEffect.Heavy ? Properties.HeavyEffectDamageMultiplier : 1f),
-		                target.localScale * Properties.Singleton.ExplosionEndSize [WeaponType],
+								* ((Properties.SecondaryEffect)secondaryEffect == Properties.SecondaryEffect.Delay ? Properties.DelayEffectDamageMultiplier : 1f)
+								* ((Properties.SecondaryEffect)secondaryEffect == Properties.SecondaryEffect.Heavy ? Properties.HeavyEffectDamageMultiplier : 1f),
+		                target.localScale * Properties.Singleton.ExplosionEndSize [weaponType],
 		                Properties.ExplosionLifeTime,
 		                1f / Properties.ExplosionLifeTime,
-		                SecondaryEffect);
+		                secondaryEffect);
 	}
 
 	[RPC]
-	public void RPCInitialize(float Damage, Vector3 EndScale, float LifeTime, float ScalingSpeed, int SecondaryEffect)
+	public void RPCInitialize(float damage, Vector3 endScale, float lifeTime, float scalingSpeed, int secondaryEffect)
 	{
-		this.Damage = Damage;
-		this.EndScale = EndScale;
-		this.LifeTime = LifeTime;
-		this.ScalingSpeed = ScalingSpeed;
-		this.SecondaryEffect = (Properties.SecondaryEffect)SecondaryEffect;
-		this.CurLifeTime = LifeTime;
+		Damage = damage;
+		EndScale = endScale;
+		LifeTime = lifeTime;
+		ScalingSpeed = scalingSpeed;
+		SecondaryEffect = (Properties.SecondaryEffect)secondaryEffect;
+		CurLifeTime = lifeTime;
 		AmmunitionType = Properties.AmmunitionType.Explosive;
 		Initialized = true;
 
@@ -67,22 +67,22 @@ public class Explosion : MonoBehaviour
 			SoundManager.GetClip ((int)Properties.Sounds.Explosion), 
 			transform.position, 
 			Properties.Singleton.SoundDefaultVolumes [(int)Properties.Sounds.Explosion],
-			Properties.Singleton.SoundDefaultMinDistances [(int)Properties.Sounds.Explosion] * EndScale.magnitude / Properties.DefaultExplosionMagnitude,
-			Properties.Singleton.SoundDefaultMaxDistances [(int)Properties.Sounds.Explosion] * EndScale.magnitude / Properties.DefaultExplosionMagnitude
+			Properties.Singleton.SoundDefaultMinDistances [(int)Properties.Sounds.Explosion] * endScale.magnitude / Properties.DefaultExplosionMagnitude,
+			Properties.Singleton.SoundDefaultMaxDistances [(int)Properties.Sounds.Explosion] * endScale.magnitude / Properties.DefaultExplosionMagnitude
 			);
 	}
 	
-	void OnTriggerEnter(Collider Info)
+	void OnTriggerEnter(Collider info)
 	{
 		if (!networkView.isMine) return;
 		
-		if (Info.gameObject.layer == Properties.AvatarLayer) 
+		if (info.gameObject.layer == Properties.AvatarLayer) 
 		{
-			PlayerController _hitPlayer = Info.transform.parent.GetComponent<PlayerController>();
-			if(_hitPlayer.networkView.isMine && SecondaryEffect == Properties.SecondaryEffect.Healing)
-				_hitPlayer.GetHit(Mathf.RoundToInt((-1) * Damage));
+			PlayerController HitPlayer = info.transform.parent.GetComponent<PlayerController>();
+			if(HitPlayer.networkView.isMine && SecondaryEffect == Properties.SecondaryEffect.Healing)
+				HitPlayer.GetHit(Mathf.RoundToInt((-1) * Damage));
 			else
-				_hitPlayer.GetHit(Mathf.RoundToInt(Damage), GameController.GetUserEntry(networkView.owner).ID, (int)AmmunitionType);
+				HitPlayer.GetHit(Mathf.RoundToInt(Damage), GameController.GetUserEntry(networkView.owner).ID, (int)AmmunitionType);
 		}
 	}
 }

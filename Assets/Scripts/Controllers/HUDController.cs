@@ -22,20 +22,20 @@ public class HUDController : MonoBehaviour
 	public Countdown MyCountdown;
 	public Statistics MyStatistics;
 
-	private List<GameObject> _myScreens;
+	private List<GameObject> MyScreens;
 
 	[HideInInspector]
 	public string CurrentNickname = Properties.DefaultNickname;
 
-	private Text _myLobbyText;
-	private string _lobbyText;
+	private Text MyLobbyText;
+	private string LobbyText;
 
 	void Start () 
 	{
-		_myScreens = new List<GameObject> (){MainMenu, Lobby, WaitingForServer, InGameUI, StartingScreen, MyStatistics.gameObject};
+		MyScreens = new List<GameObject> (){MainMenu, Lobby, WaitingForServer, InGameUI, StartingScreen, MyStatistics.gameObject};
 		Singleton = this;
-		_myLobbyText = Lobby.transform.FindChild ("Connections").GetComponent<Text> ();
-		_lobbyText = _myLobbyText.text;
+		MyLobbyText = Lobby.transform.FindChild ("Connections").GetComponent<Text> ();
+		LobbyText = MyLobbyText.text;
 
 		if (GameController.Singleton != null) 
 		{
@@ -44,9 +44,9 @@ public class HUDController : MonoBehaviour
 		} 
 		else 
 		{
-			GameController _myGameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
-			_myGameController.OnNewUserEvent += UpdateLobbyText;
-			_myGameController.OnRemoveUserEvent += UpdateLobbyText;
+			GameController MyGameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
+			MyGameController.OnNewUserEvent += UpdateLobbyText;
+			MyGameController.OnRemoveUserEvent += UpdateLobbyText;
 		}
 	}
 
@@ -68,8 +68,8 @@ public class HUDController : MonoBehaviour
 
 	public void DeactivateScreens()
 	{
-		foreach (GameObject screen in _myScreens)
-				screen.SetActive (false);
+		foreach (GameObject Page in MyScreens)
+				Page.SetActive (false);
 	}
 
 	public void SaveNickname()
@@ -93,7 +93,7 @@ public class HUDController : MonoBehaviour
 
 	public void SwitchToLobby()
 	{
-		_myLobbyText.text = _lobbyText; //if you are client, then leave and open your own game, this does not get otherwise reset
+		MyLobbyText.text = LobbyText; //if you are client, then leave and open your own game, this does not get otherwise reset
 		DeactivateScreens ();
 		Lobby.SetActive (true);
 		Lobby.transform.FindChild ("StartGame").gameObject.SetActive (Network.isServer);
@@ -132,11 +132,6 @@ public class HUDController : MonoBehaviour
 		Application.Quit ();
 	}
 
-	public void EveryoneCountdown(float TargetTime)
-	{
-		networkView.RPC ("RPCCountDownFrom", RPCMode.All, TargetTime);
-	}
-
 	public void MouseButtonClick()
 	{
 		SoundManager.PlayClipAt (
@@ -148,16 +143,8 @@ public class HUDController : MonoBehaviour
 			);
 	}
 
-	[RPC]
-	public void RPCCountDownFrom(float TargetTime)
-	{
-		if (GameController.Singleton.CurGameState == Properties.GameState.Lobby)
-			Lobby.SetActive (false);
-		Countdown.CountDownFrom (TargetTime);
-	}
-
 	public void UpdateLobbyText(GameController.UserEntry User)
 	{
-		_myLobbyText.text = _lobbyText.Replace ("1", GameController.Singleton.Users.Count.ToString ());
+		MyLobbyText.text = LobbyText.Replace ("1", GameController.Singleton.Users.Count.ToString ());
 	}
 }

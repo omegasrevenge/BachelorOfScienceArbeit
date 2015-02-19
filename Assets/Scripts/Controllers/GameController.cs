@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 public class GameController : MonoBehaviour
 {
@@ -78,7 +79,7 @@ public class GameController : MonoBehaviour
 
 	void Update()
 	{
-		if (Input.GetKeyDown (KeyCode.Escape)) 
+		if (Input.GetKeyDown (KeyCode.Escape) && (CurGameState == Properties.GameState.InGame || CurGameState == Properties.GameState.GameOver)) 
 		{
 			if(Network.isServer)
 				networkView.RPC ("RPCResetGame", RPCMode.AllBuffered);
@@ -119,7 +120,10 @@ public class GameController : MonoBehaviour
 	public void GameCommence() // called upon arena initialized, spawnpoints added, and countdown over, now spawnprocess can begin
 	{
 		MyHUD.MyCountdown.CountdownOverEvent -= GameCommence;
-		networkView.RPC ("RPCSpawnOrder", RPCMode.AllBuffered, Network.connections);
+		int[] SpawnOrderByID = new int[Users.Count];
+		for (int i = 0; i < Users.Count; i++)
+			SpawnOrderByID [i] = Users [i].ID;
+		networkView.RPC ("RPCSpawnOrder", RPCMode.AllBuffered, SpawnOrderByID);
 	}
 
 	[RPC]
@@ -130,24 +134,20 @@ public class GameController : MonoBehaviour
 		MyHUD.GameCommence ();
 	}
 
-	public IEnumerator CPlayerSpawnSequence(NetworkPlayer[] order)
+	public IEnumerator CPlayerSpawnSequence(int[] order) 
 	{
-		if (Network.isServer) 
-		{
-			SpawnPlayer ();
-			yield return new WaitForEndOfFrame();
-		} 
-		else 
-		{
-			while (Players.Count < 1)
-			{
-				yield return new WaitForEndOfFrame();
-			}
-		}
+		//
+		//
+		//
+		// Placeholder
+		//
+		//
+		//
+		//
 
-		while (Players.Count < order.Length+1) 
+		while (Players.Count < order.Length) 
 		{
-			if (order [Players.Count - 1] == Network.player)
+			if (order [Players.Count] == GetUserEntry(Network.player).ID)
 				SpawnPlayer ();
 
 			yield return new WaitForEndOfFrame();
@@ -158,7 +158,7 @@ public class GameController : MonoBehaviour
 	}
 
 	[RPC]
-	public void RPCSpawnOrder(NetworkPlayer[] order)
+	public void RPCSpawnOrder(int[] order)
 	{
 		StartCoroutine ("CPlayerSpawnSequence", order);
 	}
@@ -249,7 +249,7 @@ public class GameController : MonoBehaviour
 		}
     }
 
-    private void OnConnectedToServer()
+    void OnConnectedToServer()
 	{
 		CurGameState = Properties.GameState.Lobby;
 		MyHUD.SwitchToLobby ();
@@ -330,8 +330,8 @@ public class GameController : MonoBehaviour
 			if (DestroyCamera) 
 			{
 				Camera[] MyCams = GameObject.FindObjectsOfType<Camera> ();
-				foreach(Camera cam in MyCams)
-					Destroy(cam.gameObject);
+				foreach(Camera Cam in MyCams)
+					Destroy(Cam.gameObject);
 			}
 			
 			SpawnPlayer ();
@@ -359,7 +359,7 @@ public class GameController : MonoBehaviour
 	{
 		UserEntry MyUserEntry = GetUserEntry (id);
 
-		GameController.Singleton.Users.Remove (MyUserEntry);
+		if(MyUserEntry != null) GameController.Singleton.Users.Remove (MyUserEntry);
 
 		if (GameController.Singleton.OnRemoveUserEvent != null)
 			GameController.Singleton.OnRemoveUserEvent (MyUserEntry);

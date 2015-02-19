@@ -16,6 +16,8 @@ public class Properties : MonoBehaviour
 	public const float RespawnTimer = 2f;
 	public const int AvatarLayer = 12;
 	public const float RecollorDurationAfterHit = 0.1f;
+	public readonly Color ColorWhenHit = Color.red;
+	public readonly Color ColorWhenHealed = Color.green;
 	////////////
 
 	// SOUND MANAGER //

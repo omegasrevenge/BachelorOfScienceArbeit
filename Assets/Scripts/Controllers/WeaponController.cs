@@ -107,8 +107,8 @@ public class WeaponController : MonoBehaviour
 		WeaponModel.transform.parent = transform;
 		Nozzle = WeaponModel.transform.FindChild ("Nozzle");
 		ShootOnlyOnPress = Properties.Singleton.WeaponAttackSpeedValues [weaponType] < 0.01f;
-		foreach (MeshRenderer rend in WeaponModel.GetComponentsInChildren<MeshRenderer>())
-			rend.material.color = Properties.Singleton.WeaponColors[secondaryEffect];
+		foreach (MeshRenderer Rend in WeaponModel.GetComponentsInChildren<MeshRenderer>())
+			Rend.material.color = Properties.Singleton.WeaponColors[secondaryEffect];
 		CurAmmunition = Properties.Singleton.WeaponAmmunitionAmount [weaponType];
 		if (networkView.isMine) 
 		{
@@ -124,8 +124,8 @@ public class WeaponController : MonoBehaviour
 			return;
 
 		CurAmmunition = Mathf.Max (CurAmmunition - 1, 0);
-		if(networkView.isMine)
-			HUDController.Singleton.AmmunitionCounter.text = CurAmmunition.ToString();
+
+		HUDController.Singleton.AmmunitionCounter.text = CurAmmunition.ToString();
 
 		Ray Crosshair = GameController.Singleton.MyPlayer.transform
 			.FindChild("Camera").GetComponent<Camera>()

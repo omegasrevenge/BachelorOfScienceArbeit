@@ -10,51 +10,51 @@ public class Actionbar : MonoBehaviour
 	[HideInInspector]
 	public List<Text> ActionBarEntries = new List<Text>();
 
-	public void CreateEntry(int KillerID, int VictimID, int WeaponType, int AmmunitionType, bool KilledByDirectHit)
+	public void CreateEntry(int killerID, int victimID, int weaponType, int ammunitionType, bool killedByDirectHit)
 	{
-		networkView.RPC ("RPCCreateEntry", RPCMode.AllBuffered, KillerID, VictimID, WeaponType, AmmunitionType, KilledByDirectHit);
+		networkView.RPC ("RPCCreateEntry", RPCMode.AllBuffered, killerID, victimID, weaponType, ammunitionType, killedByDirectHit);
 	}
 
 	[RPC]
-	public void RPCCreateEntry(int KillerID, int VictimID, int WeaponType, int AmmunitionType, bool KilledByDirectHit)
+	public void RPCCreateEntry(int killerID, int victimID, int weaponType, int ammunitionType, bool killedByDirectHit)
 	{
-		foreach (Text entry in ActionBarEntries)
-			entry.GetComponent<RectTransform> ().anchoredPosition += new Vector2 (0f, Properties.ActionBarSpacing);
+		foreach (Text Entry in ActionBarEntries)
+			Entry.GetComponent<RectTransform> ().anchoredPosition += new Vector2 (0f, Properties.ActionBarSpacing);
 
-		GameObject _newEntry = (GameObject)Instantiate(ActionbarPrefab, 
+		GameObject NewEntry = (GameObject)Instantiate(ActionbarPrefab, 
 		                                               ActionbarPrefab.GetComponent<RectTransform>().position, 
 		                                               ActionbarPrefab.GetComponent<RectTransform>().rotation);
 
-		_newEntry.GetComponent<RectTransform> ().SetParent (GetComponent<RectTransform> (), false);
-		_newEntry.GetComponent<RectTransform> ().anchoredPosition = Properties.Singleton.ActionBarLineSpawnPos; 
+		NewEntry.GetComponent<RectTransform> ().SetParent (GetComponent<RectTransform> (), false);
+		NewEntry.GetComponent<RectTransform> ().anchoredPosition = Properties.Singleton.ActionBarLineSpawnPos; 
 
-		_newEntry.GetComponent<Text> ().text = 
-						GameController.GetUserEntry (KillerID).UserName + 
+		NewEntry.GetComponent<Text> ().text = 
+						GameController.GetUserEntry (killerID).UserName + 
 						Properties.ActionBarSeparator + 
-						(KilledByDirectHit ? Properties.Singleton.WeaponNames [WeaponType] : Properties.Singleton.AmmunitionNames [AmmunitionType]) + 
+						(killedByDirectHit ? Properties.Singleton.WeaponNames [weaponType] : Properties.Singleton.AmmunitionNames [ammunitionType]) + 
 						Properties.ActionBarSeparator + 
-						GameController.GetUserEntry (VictimID).UserName;
+						GameController.GetUserEntry (victimID).UserName;
 
-		ActionBarEntries.Add (_newEntry.GetComponent<Text>());
+		ActionBarEntries.Add (NewEntry.GetComponent<Text>());
 
-		StartCoroutine ("CDeleteActionBarEntry", _newEntry);
+		StartCoroutine ("CDeleteActionBarEntry", NewEntry);
 	}
 
-	public IEnumerator CDeleteActionBarEntry(GameObject Entry)
+	public IEnumerator CDeleteActionBarEntry(GameObject entry)
 	{
 		yield return new WaitForSeconds(Properties.ActionBarEntryLifeTime);
 
-		if(Entry != null)
+		if(entry != null)
 		{
-			ActionBarEntries.Remove (Entry.GetComponent<Text> ());
-			Destroy (Entry);
+			ActionBarEntries.Remove (entry.GetComponent<Text> ());
+			Destroy (entry);
 		}
 	}
 
 	void OnDisable()
 	{
-		foreach (Text entry in ActionBarEntries)
-						Destroy (entry.gameObject);
+		foreach (Text Entry in ActionBarEntries)
+						Destroy (Entry.gameObject);
 		ActionBarEntries.Clear ();
 	}
 }

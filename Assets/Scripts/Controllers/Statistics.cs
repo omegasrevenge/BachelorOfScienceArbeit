@@ -22,13 +22,13 @@ public class Statistics : MonoBehaviour
 		Entries.Clear ();
 		foreach (GameController.UserEntry User in GameController.Singleton.Users) 
 		{
-			StatisticsEntry _statEntry = ((GameObject)Instantiate(EntryPrefab, transform.position, transform.rotation)).GetComponent<StatisticsEntry>();
-			EntryCombination _newCombination = new EntryCombination(User, _statEntry);
-			Entries.Add(_newCombination);
-			_statEntry.GetComponent<RectTransform>().SetParent(transform, false);
-			_statEntry.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, -Entries.Count * Properties.StatisticsEntrySpawnDistance);
-			User.OnStatisticsUpdated += _statEntry.UpdateEntry;
-			_statEntry.UpdateEntry(User);
+			StatisticsEntry StatEntry = ((GameObject)Instantiate(EntryPrefab, transform.position, transform.rotation)).GetComponent<StatisticsEntry>();
+			EntryCombination NewCombination = new EntryCombination(User, StatEntry);
+			Entries.Add(NewCombination);
+			StatEntry.GetComponent<RectTransform>().SetParent(transform, false);
+			StatEntry.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, -Entries.Count * Properties.StatisticsEntrySpawnDistance);
+			User.OnStatisticsUpdated += StatEntry.UpdateEntry;
+			StatEntry.UpdateEntry(User);
 		}
 	}
 

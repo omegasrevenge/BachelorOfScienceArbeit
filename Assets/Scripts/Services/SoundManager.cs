@@ -14,13 +14,13 @@ public class SoundManager : MonoBehaviour
 		Singleton = this;
 		MyAudioClips = new List<AudioClip> ();
 
-		Properties _myProperties = Properties.Singleton;
+		Properties MyProperties = Properties.Singleton;
 
-		if (_myProperties == null)
-			_myProperties = GameObject.FindGameObjectWithTag("GameController").GetComponent<Properties>();
+		if (MyProperties == null)
+			MyProperties = GameObject.FindGameObjectWithTag("GameController").GetComponent<Properties>();
 
-		foreach (string audioName in _myProperties.SoundFileNames) 
-				MyAudioClips.Add (Resources.Load<AudioClip> (Properties.SoundsFolderName + "/" + audioName));
+		foreach (string AudioName in MyProperties.SoundFileNames) 
+				MyAudioClips.Add (Resources.Load<AudioClip> (Properties.SoundsFolderName + "/" + AudioName));
 	}
 
 	public static AudioClip GetClip(int index)
@@ -28,17 +28,17 @@ public class SoundManager : MonoBehaviour
 		return SoundManager.Singleton.MyAudioClips [index];
 	}
 
-	public static void PlayClipAt(AudioClip clip, Vector3 pos, float Volume, float MinDistance, float MaxDistance, float DopplerLevel = 0f)
+	public static void PlayClipAt(AudioClip clip, Vector3 pos, float volume, float minDistance, float maxDistance, float dopplerLevel = 0f)
 	{
-		GameObject _myGameObject = new GameObject("TempAudio");
-		_myGameObject.transform.position = pos;
-		AudioSource _audioSource = _myGameObject.AddComponent<AudioSource>();
-		_audioSource.clip = clip;
-		_audioSource.volume = Volume;
-		_audioSource.minDistance = MinDistance;
-		_audioSource.maxDistance = MaxDistance;
-		_audioSource.dopplerLevel = DopplerLevel;
-		_audioSource.Play();
-		Destroy(_myGameObject, clip.length);
+		GameObject MyGameObject = new GameObject("TempAudio");
+		MyGameObject.transform.position = pos;
+		AudioSource AudioSrc = MyGameObject.AddComponent<AudioSource>();
+		AudioSrc.clip = clip;
+		AudioSrc.volume = volume;
+		AudioSrc.minDistance = minDistance;
+		AudioSrc.maxDistance = maxDistance;
+		AudioSrc.dopplerLevel = dopplerLevel;
+		AudioSrc.Play();
+		Destroy(MyGameObject, clip.length);
 	}
 }

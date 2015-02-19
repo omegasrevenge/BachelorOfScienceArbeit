@@ -65,8 +65,8 @@ public class PlayerController : MonoBehaviour
 		if (!networkView.isMine) return;
 
 		MyGameController.MyPlayer = gameObject;
-		InitializePlayer ();
 		HUDController.Singleton.HealthCounter.text = Health.ToString ();
+		InitializePlayer ();
 	}
 
 	void Update()
@@ -123,30 +123,30 @@ public class PlayerController : MonoBehaviour
 
 	}
 
-	public void GetHit(int Damage, int SourceID, int WeaponType, int AmmunitionType, bool KilledByDirectHit)
+	public void GetHit(int damage, int sourceID, int weaponType, int ammunitionType, bool killedByDirectHit)
 	{
 		if(!Dead)
-			networkView.RPC ("RPCGetHit", RPCMode.AllBuffered, Damage, SourceID, WeaponType, AmmunitionType, KilledByDirectHit);
+			networkView.RPC ("RPCGetHit", RPCMode.AllBuffered, damage, sourceID, weaponType, ammunitionType, killedByDirectHit);
 	}
 	
-	public void GetHit(int Damage, int SourceID, int AmmunitionType)
+	public void GetHit(int damage, int sourceID, int ammunitionType)
 	{
 		if(!Dead)
-			networkView.RPC ("RPCGetHit", RPCMode.AllBuffered, Damage, SourceID, 0, AmmunitionType, false);
+			networkView.RPC ("RPCGetHit", RPCMode.AllBuffered, damage, sourceID, 0, ammunitionType, false);
 	}
 	
-	public void GetHit(int Damage)
+	public void GetHit(int damage)
 	{
 		if(!Dead)
-			networkView.RPC ("RPCGetHit", RPCMode.AllBuffered, Damage, GameController.GetUserEntry(networkView.owner).ID, 0, 0, false);
+			networkView.RPC ("RPCGetHit", RPCMode.AllBuffered, damage, GameController.GetUserEntry(networkView.owner).ID, 0, 0, false);
 	}
 
 	[RPC]
-	public void RPCGetHit(int Damage, int SourceID, int WeaponType, int AmmunitionType, bool KilledByDirectHit)
+	public void RPCGetHit(int damage, int sourceID, int weaponType, int ammunitionType, bool killedByDirectHit)
 	{
 		GotHit = true;
-		Health = Mathf.Clamp (Health - Damage, 0, Properties.MaxPlayerHealth);
-		MyHitColor = Damage < 0f ? Color.green : Color.red;
+		MyHitColor = damage < 0f ? Properties.Singleton.ColorWhenHealed : Properties.Singleton.ColorWhenHit;
+		Health = Mathf.Clamp (Health - damage, 0, Properties.MaxPlayerHealth);
 
 		if (!PlayingHitSound)
 						StartCoroutine ("CPlayHitSound");
@@ -154,7 +154,7 @@ public class PlayerController : MonoBehaviour
 		if (!networkView.isMine)
 						return;
 
-		if (Health == 0) Die (SourceID, WeaponType, AmmunitionType, KilledByDirectHit);
+		if (Health == 0) Die (sourceID, weaponType, ammunitionType, killedByDirectHit);
 
 		HUDController.Singleton.HealthCounter.text = Health.ToString ();
 	}
@@ -176,27 +176,27 @@ public class PlayerController : MonoBehaviour
 		PlayingHitSound = false;
 	}
 
-	public void Die(int KillerID, int WeaponType, int AmmunitionType, bool KilledByDirectHit)
+	public void Die(int killerID, int weaponType, int ammunitionType, bool killedByDirectHit)
 	{
 		if(!Dead)
 			networkView.RPC ("RPCDie", 
 			                 RPCMode.AllBuffered, 
-			                 KillerID, 
+			                 killerID, 
 			                 GameController.GetUserEntry(networkView.owner).ID, 
-			                 WeaponType, 
-			                 AmmunitionType, 
-			                 KilledByDirectHit);
+			                 weaponType, 
+			                 ammunitionType, 
+			                 killedByDirectHit);
 	}
 
 	[RPC]
-	public void RPCDie(int KillerID, int VictimID, int WeaponType, int AmmunitionType, bool KilledByDirectHit)
+	public void RPCDie(int killerID, int victimID, int weaponType, int ammunitionType, bool killedByDirectHit)
 	{
 		if (Dead) return;
 		Dead = true;
 
 		
-		GameController.UserEntry Killer = GameController.GetUserEntry (KillerID);
-		GameController.UserEntry Victim = GameController.GetUserEntry (VictimID);
+		GameController.UserEntry Killer = GameController.GetUserEntry (killerID);
+		GameController.UserEntry Victim = GameController.GetUserEntry (victimID);
 
 		Killer.UpdateStatistics (Killer.Kills + 1, Killer.Deaths);
 		Victim.UpdateStatistics (Victim.Kills, Victim.Deaths + 1);
@@ -207,7 +207,7 @@ public class PlayerController : MonoBehaviour
 		
 		if (networkView.isMine) 
 		{
-			HUDController.Singleton.MyActionBar.CreateEntry (KillerID, VictimID, WeaponType, AmmunitionType, KilledByDirectHit);
+			HUDController.Singleton.MyActionBar.CreateEntry (killerID, victimID, weaponType, ammunitionType, killedByDirectHit);
 
 			GameObject MyCheckPlayerDeath = new GameObject ("DebugPlayerNotDying");
 			MyCheckPlayerDeath.AddComponent<CheckPlayerDeath> ().StartCheck (this);
@@ -251,7 +251,7 @@ public class PlayerController : MonoBehaviour
 		Projector Shadow = gameObject.GetComponentInChildren<Projector> ();
 		float ShadowMaxStrength = Shadow.farClipPlane;
 
-		while ((CurDyingTime / DyingTime) > 0f) 
+		while ((CurDyingTime / DyingTime) > 0.01f) 
 		{
 			yield return new WaitForEndOfFrame();
 
@@ -259,14 +259,14 @@ public class PlayerController : MonoBehaviour
 
 			foreach(MeshRenderer rend in PlayerRenderer)
 			{
-				Color _col = rend.material.color;
-				rend.material.color = new Color(_col.r, _col.g, _col.b, CurDyingTime / DyingTime);
+				Color Col = rend.material.color;
+				rend.material.color = new Color(Col.r, Col.g, Col.b, CurDyingTime / DyingTime);
 			}
 			
 			foreach(MeshRenderer Rend in WeaponRenderers)
 			{
-				Color _col = Rend.material.color;
-				Rend.material.color = new Color(_col.r, _col.g, _col.b, CurDyingTime / DyingTime);
+				Color Col = Rend.material.color;
+				Rend.material.color = new Color(Col.r, Col.g, Col.b, CurDyingTime / DyingTime);
 			}
 
 			Shadow.farClipPlane = ShadowMaxStrength * (CurDyingTime / DyingTime);
